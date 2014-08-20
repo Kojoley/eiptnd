@@ -1,0 +1,30 @@
+project(wialon_plugin)
+cmake_minimum_required(VERSION 2.8)
+aux_source_directory(. SRC_LIST)
+add_library(${PROJECT_NAME} SHARED ${SRC_LIST})
+
+set(Boost_USE_MULTITHREADED ON)
+if(WIN32)
+  set(Boost_USE_STATIC_LIBS ON)
+  set(Boost_USE_STATIC_RUNTIME ON)
+
+  macro(get_WIN32_WINNT version)
+      if(WIN32 AND CMAKE_SYSTEM_VERSION)
+          set(ver ${CMAKE_SYSTEM_VERSION})
+          string(REPLACE "." "" ver ${ver})
+          string(REGEX REPLACE "([0-9])" "0\\1" ver ${ver})
+
+          set(${version} "0x${ver}")
+      endif()
+  endmacro()
+
+  get_WIN32_WINNT(ver)
+  add_definitions(-D_WIN32_WINNT=${ver})
+else()
+  set(Boost_USE_STATIC_LIBS OFF)
+  set(Boost_USE_STATIC_RUNTIME OFF)
+  add_definitions(-DBOOST_ALL_DYN_LINK)
+endif()
+
+find_package(Boost 1.55 COMPONENTS REQUIRED)
+include_directories(../../include ${Boost_INCLUDE_DIRS})
