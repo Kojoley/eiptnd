@@ -10,6 +10,15 @@ IF(STATIC_LINKING)
   SET(CMAKE_EXE_LINKER_FLAGS "-static")
 ENDIF(STATIC_LINKING)
 
+# enable warnings
+#if (CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
+#  set_target_properties(${PROJECT_NAME} PROPERTIES COMPILE_FLAGS "/Wall")
+#elseif (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+#  set_target_properties(${PROJECT_NAME} PROPERTIES COMPILE_FLAGS "-Weverything")
+#elseif (CMAKE_CXX_COMPILER_ID MATCHES "GNU")
+#  set_target_properties(${PROJECT_NAME} PROPERTIES COMPILE_FLAGS "-Wall -Wextra")
+#endif()
+
 if(WIN32)
   # http://stackoverflow.com/a/17845462
   macro(get_WIN32_WINNT version)

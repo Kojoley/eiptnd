@@ -5,8 +5,10 @@
 
 #include "plugin_factory.hpp"
 
+namespace eiptnd {
+
 void
-eiptnd::plugin_factory::load(const boost::filesystem::path& path_name)
+plugin_factory::load(const boost::filesystem::path& path_name)
 {
   /// TODO: boost::application::library throws boost::system::system_error
   boost::shared_ptr<boost::application::shared_library> lib
@@ -23,33 +25,35 @@ eiptnd::plugin_factory::load(const boost::filesystem::path& path_name)
     //create_shared_fn create_shared = lib->get<create_shared_fn>("create_shared"/*, ec*/);
 
     /// TODO: Check if plugin already loaded
-    boost::function<plugin_api_ptr()> plugin_ptr_creator =
+    plugin_api_ptr_fn plugin_ptr_creator =
         boost::lambda::bind(
           boost::lambda::constructor<plugin_api_ptr>(),
           boost::lambda::bind(creator), deleter );
 
     //boost::shared_ptr<plugin_api::interface> create_shared;
     //const std::string name = plugin_ptr_creator()->name();
+    puid_t puid = 0;
     const std::string name = create_shared()->name();
+    const std::string version = create_shared()->version();
     if (name == "Echo TCP Plugin") {
-      lib_holder_.emplace(3333, lib);
-      plugins_.emplace(3333, plugin_ptr_creator);
+      puid = 3333;
     }
-    else if (name == "Wialon IPS")
-    {
-      lib_holder_.emplace(4444, lib);
-      plugins_.emplace(4444, plugin_ptr_creator);
+    else if (name == "Wialon IPS") {
+      puid = 4444;
     }
 
+    plugins_.emplace(puid, boost::make_shared<plugin_info>(lib, create_shared, name, version));
+
     BOOST_LOG_SEV(log_, logging::notify)
-      << boost::log::add_value("PluginName", name)
       << boost::log::add_value("PluginPath", path_name.string())
-      << "Loaded plugin";
+      << boost::log::add_value("PluginName", name)
+      << boost::log::add_value("PluginVersion", version)
+      << "Plugin loaded";
   }
 }
 
 void
-eiptnd::plugin_factory::load_dir(const boost::filesystem::path& path_dir)
+plugin_factory::load_dir(const boost::filesystem::path& path_dir)
 {
   BOOST_LOG_SEV(log_, logging::notify)
     << boost::log::add_value("LoadingDir", path_dir)
@@ -73,14 +77,16 @@ eiptnd::plugin_factory::load_dir(const boost::filesystem::path& path_dir)
   }
 }
 
-eiptnd::plugin_api_ptr
-eiptnd::plugin_factory::create(puid_t uid)
+plugin_api_ptr
+plugin_factory::create(puid_t uid)
 {
   BOOST_AUTO(it, plugins_.find(uid));
 
   if (it != plugins_.end()) {
-    return it->second();
+    return (*it->second)();
   }
 
   return plugin_api_ptr(/*nullptr*/);
 }
+
+} // namespace eiptnd

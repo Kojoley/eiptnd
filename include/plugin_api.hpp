@@ -50,6 +50,11 @@ boost::shared_ptr<plugin_api::interface> create_shared();
 
 } // plugin_api
 
+typedef boost::shared_ptr<plugin_api::interface> plugin_api_ptr;
+typedef boost::function<plugin_api_ptr()> plugin_api_ptr_fn;
+
+} // namespace eiptnd
+
 #define DECLARE_PLUGIN(T)              \
                                        \
 LIBRARY_API eiptnd::plugin_api::interface*     \
@@ -71,9 +76,5 @@ create_shared(void)                                 \
 /// TODO: Prevent double usage
 /// TODO: Using in namespaces
 // DECLARE_PLUGIN
-
-typedef boost::shared_ptr<plugin_api::interface> plugin_api_ptr;
-
-} // namespace eiptnd
 
 #endif // PLUGIN_API_H

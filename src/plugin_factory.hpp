@@ -6,6 +6,7 @@
 #include <boost/unordered_map.hpp>
 
 #include "plugin_api.hpp"
+#include "plugin_info.hpp"
 #include "log.hpp"
 
 namespace eiptnd {
@@ -15,7 +16,6 @@ class plugin_factory
 public:
   typedef BOOST_TYPEOF(&plugin_api::create) create_ptr_fn;
   typedef BOOST_TYPEOF(&plugin_api::destroy) destroy_ptr_fn;
-  typedef boost::function<plugin_api_ptr()> plugin_api_ptr_fn;
   typedef unsigned short puid_t;
 
   plugin_factory()
@@ -36,8 +36,7 @@ private:
   logging::logger log_;
 
   ///
-  boost::unordered_map<puid_t, plugin_api_ptr_fn> plugins_;
-  boost::unordered_map<puid_t, boost::shared_ptr<boost::application::shared_library> > lib_holder_;
+  boost::unordered_map<puid_t, plugin_info_ptr> plugins_;
 };
 
 } // namespace eiptnd
