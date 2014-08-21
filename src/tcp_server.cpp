@@ -6,7 +6,9 @@
 #include <boost/shared_ptr.hpp>
 #include <boost/thread/thread.hpp>
 
-eiptnd::tcp_server::tcp_server(boost::asio::io_service& io_service,
+namespace eiptnd {
+
+tcp_server::tcp_server(boost::asio::io_service& io_service,
                const std::string& address, unsigned short port_num,
                plugin_factory& pf)
   : log_(logging::keywords::channel = "net")
@@ -26,7 +28,7 @@ eiptnd::tcp_server::tcp_server(boost::asio::io_service& io_service,
 }
 
 void
-eiptnd::tcp_server::start_accept()
+tcp_server::start_accept()
 {
   BOOST_LOG_SEV(log_, logging::trace) << "start_accept()";
 
@@ -37,7 +39,7 @@ eiptnd::tcp_server::start_accept()
 }
 
 void
-eiptnd::tcp_server::handle_accept(const boost::system::error_code& ec)
+tcp_server::handle_accept(const boost::system::error_code& ec)
 {
   BOOST_LOG_SEV(log_, logging::trace) << "handle_accept()";
 
@@ -52,3 +54,5 @@ eiptnd::tcp_server::handle_accept(const boost::system::error_code& ec)
 
   start_accept();
 }
+
+} // namespace eiptnd

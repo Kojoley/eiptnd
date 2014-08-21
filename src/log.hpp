@@ -45,7 +45,7 @@ typedef sinks::asynchronous_sink<
 
 boost::shared_ptr<sink_t> init_logging();
 
-} // namespace log
+} // namespace logging
 } // namespace eiptnd
 
 #endif // LOG_HPP

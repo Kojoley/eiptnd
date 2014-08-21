@@ -5,7 +5,9 @@
 
 #include <boost/log/attributes.hpp>
 
-eiptnd::connection::connection(boost::asio::io_service& io_service)
+namespace eiptnd {
+
+connection::connection(boost::asio::io_service& io_service)
   : log_(logging::keywords::channel = "connection")
   , strand_(io_service)
   , socket_(io_service)
@@ -13,20 +15,20 @@ eiptnd::connection::connection(boost::asio::io_service& io_service)
   /// NOTE: There is no real conection here, only waiting for it.
 }
 
-eiptnd::connection::~connection()
+connection::~connection()
 {
   BOOST_LOG_SEV(log_, logging::info) << "Connection closed";
 
   //conn_mgr_.on_close(socket_.remote_endpoint());
 }
 
-boost::asio::ip::tcp::socket& eiptnd::connection::socket()
+boost::asio::ip::tcp::socket& connection::socket()
 {
   return socket_;
 }
 
 void
-eiptnd::connection::on_connection(plugin_factory& plugin_factory_)
+connection::on_connection(plugin_factory& plugin_factory_)
 {
   boost::asio::ip::tcp::endpoint local_endpoint = socket_.local_endpoint();
   boost::asio::ip::tcp::endpoint remote_endpoint = socket_.remote_endpoint();
@@ -53,13 +55,13 @@ eiptnd::connection::on_connection(plugin_factory& plugin_factory_)
 }
 
 /*void
-eiptnd::connection::do_read2(const boost::asio::mutable_buffer& buffers)
+connection::do_read2(const boost::asio::mutable_buffer& buffers)
 {
   boost::asio::async_read(socket_, )
 }*/
 
 void
-eiptnd::connection::do_read_until(boost::asio::streambuf& sbuf, const std::string& delim)
+connection::do_read_until(boost::asio::streambuf& sbuf, const std::string& delim)
 {
   boost::asio::async_read_until(socket_, sbuf, delim,
       strand_.wrap(
@@ -67,7 +69,7 @@ eiptnd::connection::do_read_until(boost::asio::streambuf& sbuf, const std::strin
 }
 
 void
-eiptnd::connection::do_read_some(const boost::asio::mutable_buffer& buffers)
+connection::do_read_some(const boost::asio::mutable_buffer& buffers)
 {
   socket_.async_read_some(boost::asio::mutable_buffers_1(buffers),
       strand_.wrap(
@@ -75,7 +77,7 @@ eiptnd::connection::do_read_some(const boost::asio::mutable_buffer& buffers)
 }
 
 void
-eiptnd::connection::do_write(const boost::asio::const_buffer& buffers)
+connection::do_write(const boost::asio::const_buffer& buffers)
 {
   boost::asio::async_write(socket_,
       boost::asio::const_buffers_1(buffers),
@@ -84,7 +86,7 @@ eiptnd::connection::do_write(const boost::asio::const_buffer& buffers)
 }
 
 void
-eiptnd::connection::handle_read(const boost::system::error_code& ec,
+connection::handle_read(const boost::system::error_code& ec,
     std::size_t bytes_transferred)
 {
   /*if (!ec) {
@@ -116,7 +118,7 @@ eiptnd::connection::handle_read(const boost::system::error_code& ec,
 }
 
 void
-eiptnd::connection::handle_write(const boost::system::error_code& ec)
+connection::handle_write(const boost::system::error_code& ec)
 {
   if (!ec) {
     process_handler_->handle_write();
@@ -128,10 +130,12 @@ eiptnd::connection::handle_write(const boost::system::error_code& ec)
 }
 
 void
-eiptnd::connection::close()
+connection::close()
 {
   BOOST_LOG_SEV(log_, logging::info) << "Closing connection";
 
   boost::system::error_code ignored_ec;
   socket_.shutdown(boost::asio::ip::tcp::socket::shutdown_both, ignored_ec);
 }
+
+} // namespace eiptnd
