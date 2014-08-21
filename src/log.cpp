@@ -33,6 +33,10 @@ inline std::basic_ostream<CharT, TraitsT>& operator<< (
 
   os << strings[level / 0x200];
 
+  if (level % 0x200) {
+    os << ":" << static_cast<std::size_t>(level);
+  }
+
   return os;
 }
 
@@ -78,6 +82,7 @@ init_logging()
 
   //sink->set_filter(expr::attr< severity_level >("Severity") >= warning);
   sink_->set_formatter(
+    /// TODO: Use Boost.Karma for formatting?
     expr::format("[%1%] <%2%>\t[%3%] - %4%")
       % expr::format_date_time<boost::posix_time::ptime>("TimeStamp", "%H:%M:%S.%f")
       % expr::attr<logging::severity_level>("Severity")

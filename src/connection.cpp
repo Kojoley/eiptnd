@@ -6,9 +6,9 @@
 #include <boost/log/attributes.hpp>
 
 eiptnd::connection::connection(boost::asio::io_service& io_service)
-  : strand_(io_service)
+  : log_(logging::keywords::channel = "connection")
+  , strand_(io_service)
   , socket_(io_service)
-  , log_(logging::keywords::channel = "connection")
 {
   /// NOTE: There is no real conection here, only waiting for it.
 }
@@ -33,7 +33,7 @@ eiptnd::connection::on_connection(plugin_factory& plugin_factory_)
 
   /// TODO: replace stringstream with anything more perfomance
   std::stringstream remote_addr;
-  remote_addr << remote_endpoint.address() << ":" << remote_endpoint.port();
+  remote_addr << remote_endpoint;
   boost::log::attributes::constant<std::string> addr(remote_addr.str());
   net_raddr_ = log_.add_attribute("RemoteAddress", addr).first;
 

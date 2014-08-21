@@ -38,16 +38,16 @@ public:
   void do_write(const boost::asio::const_buffer& buffer);
 
 private:
-  /// Logger instance and attributes.
-  logging::logger log_;
-  boost::log::attribute_set::iterator net_raddr_, stat_raddr_;
-
   /// Handle completion of a read operation.
   void handle_read(const boost::system::error_code& ec,
       std::size_t bytes_transferred);
 
   /// Handle completion of a write operation.
   void handle_write(const boost::system::error_code& ec);
+
+  /// Logger instance and attributes.
+  logging::logger log_;
+  boost::log::attribute_set::iterator net_raddr_;
 
   /// Strand to ensure the connection's handlers are not called concurrently.
   boost::asio::io_service::strand strand_;

@@ -9,11 +9,11 @@
 eiptnd::tcp_server::tcp_server(boost::asio::io_service& io_service,
                const std::string& address, unsigned short port_num,
                plugin_factory& pf)
-  : io_service_(io_service)
+  : log_(logging::keywords::channel = "net")
+  , io_service_(io_service)
   , acceptor_(io_service)
   , new_connection_()
   , plugin_factory_(pf)
-  , log_(logging::keywords::channel = "net")
 {
   using namespace boost::asio::ip;
 

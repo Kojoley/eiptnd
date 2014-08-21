@@ -99,7 +99,6 @@ public:
     }
     threads.join_all();
 
-    //BOOST_LOG_SEV(log_, log::notify) << "All threads are done";
     BOOST_LOG_SEV(log_, logging::notify) << "All threads are done";
 
     return EXIT_SUCCESS;
@@ -107,7 +106,8 @@ public:
 
   bool stop()
   {
-    std::cout << "stop!" << std::endl;
+    BOOST_LOG_SEV(log_, logging::notify) << "Caught signal to stop";
+    sink_->flush();
     io_service_.stop();
     return true; // return true to stop, false to ignore
   }
@@ -214,7 +214,7 @@ int main(int argc, char* argv[])
       application::setup_arg(exec_path)).install(ec);
 
     if (ec) {
-      std::cout << ec.message() << std::endl;
+      std::cerr << ec.message() << std::endl;
       return EXIT_FAILURE;
     }
   }
@@ -225,7 +225,7 @@ int main(int argc, char* argv[])
       application::setup_arg(exec_path)).uninstall(ec);
 
     if (ec) {
-      std::cout << ec.message() << std::endl;
+      std::cerr << ec.message() << std::endl;
       return EXIT_FAILURE;
     }
   }
@@ -249,10 +249,12 @@ int main(int argc, char* argv[])
   }
 
   if (ec) {
-    std::cout << "[main::Error] " << ec.message()
+    std::cerr << "[main::Error] " << ec.message()
               << " (" << ec.value() << ")" << std::endl;
     result = EXIT_FAILURE;
   }
+
+  std::cout << "Bye!" << std::endl;
 
   return result;
 }

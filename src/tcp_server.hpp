@@ -37,17 +37,14 @@ public:
 private:
   /*BOOST_MOVABLE_BUT_NOT_COPYABLE(server);*/
 
-  /// Logger channels and attributes.
-  logging::logger log_;
-
   /// Initiate an asynchronous accept operation.
   void start_accept();
 
   /// Handle completion of an asynchronous accept operation.
   void handle_accept(const boost::system::error_code& ec);
 
-  /// The number of threads that will call io_service::run().
-  std::size_t thread_pool_size_;
+  /// Logger channels and attributes.
+  logging::logger log_;
 
   /// The io_service used to perform asynchronous operations.
   boost::asio::io_service& io_service_;
