@@ -16,7 +16,31 @@
 
 #include <boost/algorithm/string/trim.hpp>
 
-//#define unexpected_token(expected, got) parser_error("Unexpected token, expected: '" + expected +"' got: '" + got + "'");
+namespace eiptnd {
+
+//using boost::property_tree::json_parser::create_escapes;
+using namespace boost::property_tree::json_parser;
+
+/*template <typename CharT, typename TraitsT>
+inline std::basic_ostream<CharT, TraitsT>& operator<< (
+  std::basic_ostream<CharT, TraitsT>& os, const wialon_plugin::state_t state)
+{
+  static const char* strings[] = {
+    "STATE_INITIAL",
+    "STATE_IMEI",
+    "STATE_COMMAND",
+    "STATE_BODY",
+    "STATE_HASH_FIRST",
+    "STATE_HASH_SECOND",
+    "STATE_BAR",
+    "STATE_END",
+    "STATE_SKIP_TO_BAR_OR_END",
+    "STATE_SKIP_TO_END",
+    "STATE_BINARY_DATA"
+  };
+
+  return os << strings[state];
+}*/
 
 #pragma push_macro("_")
 #undef _
@@ -62,8 +86,9 @@ wialon_plugin::fields_t wialon_plugin::fields_ = boost::assign::list_of<fields_s
 #pragma pop_macro("_")
 
 wialon_plugin::wialon_plugin()
+  : log_(boost::log::keywords::channel = "plugin2")
 {
-  std::cout << name() << " created" << std::endl;
+  BOOST_LOG_SEV(log_, logging::trace) << name() << " created";
 
   authenticated_ = false;
   state_ = STATE_INITIAL;
@@ -71,7 +96,9 @@ wialon_plugin::wialon_plugin()
 
 wialon_plugin::~wialon_plugin()
 {
-  std::cout << name() << " destroyed" << std::endl;
+  BOOST_LOG_SEV(log_, logging::trace) << name() << " destroyed";
+
+  boost::log::core::get()->flush(); /// FIXME: At reworking logging
 }
 
 void wialon_plugin::handle_start()
@@ -81,20 +108,12 @@ void wialon_plugin::handle_start()
 
 void wialon_plugin::handle_read(std::size_t bytes_transferred)
 {
-  //std::cout << "*handle_read*";
-  //api_->do_write(boost::asio::buffer(buffer_, bytes_transferred));
-  //std::cout << std::string(buffer_.c_array()).substr(0, bytes_transferred) << std::endl;
-
-
-  /*std::string msg = buffer_.data();*/
-
   std::string msg;
   std::istream is(&sbuf_);
 
-
   while (true) {
     if (!sbuf_.size()) {
-      std::cout << "[ALEERT SOMTHING BAAD]" << std::endl;
+      BOOST_LOG_SEV(log_, logging::error) << "Happend something bad";
       return;
     }
 
@@ -114,8 +133,9 @@ void wialon_plugin::handle_read(std::size_t bytes_transferred)
     }
   }
 
-  std::cout << "input string: " << boost::property_tree::json_parser::create_escapes(msg) << "\n"
-            << "size: " << msg.size() << std::endl;
+  BOOST_LOG_SEV(log_, logging::trace)
+    << "[Parser::Input] size: " << msg.size()
+    << "data: " << create_escapes(msg);
 
   parse_string(msg);
   consume_token("\r\n"); /// NOTE: Hack for consumed LF
@@ -124,14 +144,12 @@ void wialon_plugin::handle_read(std::size_t bytes_transferred)
     api_->do_read_until(sbuf_, "\r\n");
   }
   else {
-
+    /// Read estimate_ bytes;
   }
 }
 
 void wialon_plugin::handle_write()
 {
-  //std::cout << "*handle_write*";
-  //api_->do_read(boost::asio::buffer(buffer_));
 }
 
 void wialon_plugin::parse_string(const std::string& msg)
@@ -140,15 +158,10 @@ void wialon_plugin::parse_string(const std::string& msg)
 
   boost::tokenizer<boost::char_separator<char> > tokens(msg, sep_);
   BOOST_FOREACH(const std::string& tok, tokens) {
-    std::cout << "comsume_token(): "
-              << tok.size()
-              << ": \""
-              << boost::property_tree::json_parser::create_escapes(tok)
-              << "\" "
-              /*<< std::hex << std::setw(2) << std::setfill('0') << tok*/
-              /*<< (boost::format("%X") % tok)*/
-              /*<< hex_cast::hex_as<std::string>(tok)*/
-              << std::endl;
+    BOOST_LOG_SEV(log_, logging::trace)
+      << "[Parser::Consume] size: " << tok.size()
+      << "token: " << create_escapes(msg);
+
     consume_token(tok);
   }
 }
@@ -210,7 +223,9 @@ void wialon_plugin::consume_token(const std::string& tok)
       imei_ = tok;
       authenticated_ = true;
     }*/
-    std::cout << boost::lexical_cast<std::string>(state_) << " changed to STATE_HASH" << std::endl;
+    BOOST_LOG_SEV(log_, logging::trace)
+      << "[Parser::State] " << state_
+      << " changed to STATE_HASH_FIRST";
     state_ = STATE_HASH_FIRST;
     break;
 
@@ -229,13 +244,16 @@ void wialon_plugin::consume_token(const std::string& tok)
 
     if (!authenticated_ && current_cmd_ != COMMAND_LOGIN) {
       state_ = STATE_SKIP_TO_END;
-      std::cout << "STATE_COMMAND changed to STATE_SKIP_TO_END due to !authenticated_" << std::endl;
-      answer("not too faaaaaast"); /// FIXME: REMOVE ME
+      BOOST_LOG_SEV(log_, logging::trace)
+        << "[Parser::State] STATE_COMMAND change to STATE_SKIP_TO_END"
+           " due to not authenticated";
       break;
     }
 
     state_ = STATE_HASH_SECOND;
-    std::cout << "STATE_COMMAND changed to STATE_HASH "<< boost::lexical_cast<std::string>(current_cmd_) << std::endl;
+    BOOST_LOG_SEV(log_, logging::trace)
+      << "[Parser::State] STATE_COMMAND change to " << state_
+      << " by command " << current_cmd_;
     break;
 
   case STATE_BODY:
@@ -252,19 +270,22 @@ void wialon_plugin::consume_token(const std::string& tok)
 
     if (!estimate_) {
       state_ = ( (current_cmd_ != COMMAND_BLACKBOX) ? STATE_END : STATE_BAR );
-      std::cout << "STATE_BODY changed to " << boost::lexical_cast<std::string>(state_) << std::endl;
+      BOOST_LOG_SEV(log_, logging::trace)
+        << "[Parser::State] STATE_BODY changed to " << state_;
     }
     else {
-      std::cout << "STATE_BODY unchanged" << std::endl;
+      BOOST_LOG_SEV(log_, logging::trace)
+        << "[Parser::State] STATE_BODY unchanged";
     }
     break;
 
   case STATE_HASH_FIRST:
   case STATE_HASH_SECOND:
     if ("#" == tok) {
-      const std::string prev_state = boost::lexical_cast<std::string>(state_);
+      const state_t prev_state = state_;
       state_ = ( (state_ == STATE_HASH_FIRST) ? STATE_COMMAND : STATE_BODY );
-      std::cout << prev_state << " change to " << boost::lexical_cast<std::string>(state_) << std::endl;
+      BOOST_LOG_SEV(log_, logging::trace)
+        << "[Parser::State] " << prev_state << " changed to " << state_;
       break;
     }
     state_ = STATE_SKIP_TO_END;
@@ -297,23 +318,25 @@ void wialon_plugin::consume_token(const std::string& tok)
 void wialon_plugin::unexpected_token(const std::string& expected,
                                      const std::string& got)
 {
-  parser_error("Unexpected token, expected: '" + boost::property_tree::json_parser::create_escapes(expected) +"' got: '" + boost::property_tree::json_parser::create_escapes(got) + "'");
+  parser_error("Unexpected token, expected: '" + create_escapes(expected) +"' got: '" + create_escapes(got) + "'");
 }
 
 void wialon_plugin::parser_error(const std::string& message)
 {
-  std::cout << "[Parser::Error] " << message << std::endl;
+  BOOST_LOG_SEV(log_, logging::trace) << "[Parser::Error] " << message;
 }
 
 void wialon_plugin::commit_command()
 {
   std::stringstream ss;
   boost::property_tree::json_parser::write_json(ss, *tree_, true);
-  std::cout << "commit_command(): " << cmd_ << "\n" << ss.str() << std::endl;
+  BOOST_LOG_SEV(log_, logging::trace)
+    << "commit_command(): " << cmd_ << "\n" << ss.str();
 
   switch (current_cmd_) {
   case COMMAND_LOGIN:
-    std::cout << "Logining with " << tree_->get<std::string>("imei") << ":" << tree_->get<std::string>("password") << std::endl;
+    BOOST_LOG_SEV(log_, logging::trace)
+      << "Logining with " << tree_->get<std::string>("imei") << ":" << tree_->get<std::string>("password");
     answer("1");authenticated_ = true; // FIXME: REMOVE ME
     /// TODO: Check for brute-force attack!?
     /*if (parse error) {
@@ -376,3 +399,5 @@ void wialon_plugin::answer(const std::string& msg)
     /// TODO: Close connection?
   }
 }*/
+
+} // namespace eiptnd

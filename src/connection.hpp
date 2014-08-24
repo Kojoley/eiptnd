@@ -56,7 +56,7 @@ private:
   boost::asio::ip::tcp::socket socket_;
 
   /// The handler used to process the data.
-  plugin_api_ptr process_handler_;
+  plugin_interface_ptr process_handler_;
 
 };
 

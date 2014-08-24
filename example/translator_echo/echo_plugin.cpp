@@ -1,14 +1,20 @@
 #include "echo_plugin.hpp"
 
+#include <boost/property_tree/json_parser.hpp> /// for create_escapes
+
+namespace eiptnd {
+
 echo_plugin::echo_plugin()
+  : log_(boost::log::keywords::channel = "plugin1")
 {
-  std::cout << name() << " created" << std::endl;
-  //api_->connection->do_read(buf_);
+  BOOST_LOG_SEV(log_, logging::trace) << name() << " created";
 }
 
 echo_plugin::~echo_plugin()
 {
-  std::cout << name() << " destroyed" << std::endl;
+  BOOST_LOG_SEV(log_, logging::trace) << name() << " destroyed";
+
+  boost::log::core::get()->flush(); /// FIXME: At reworking logging
 }
 
 void echo_plugin::handle_start()
@@ -18,13 +24,17 @@ void echo_plugin::handle_start()
 
 void echo_plugin::handle_read(std::size_t bytes_transferred)
 {
-  //std::cout << "*handle_read*";
+  std::string data(buffer_.c_array(), 0, bytes_transferred);
+  BOOST_LOG_SEV(log_, logging::trace)
+      << "recieved " << bytes_transferred << " bytes: "
+      << boost::property_tree::json_parser::create_escapes(data);
+
   api_->do_write(boost::asio::buffer(buffer_, bytes_transferred));
-  std::cout << std::string(buffer_.c_array()).substr(0, bytes_transferred) << std::endl;
 }
 
 void echo_plugin::handle_write()
 {
-  //std::cout << "*handle_write*";
   api_->do_read_some(boost::asio::buffer(buffer_));
 }
+
+} // namespace eiptnd

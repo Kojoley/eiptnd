@@ -3,17 +3,13 @@
 
 #define LIBRARY_API extern "C" BOOST_SYMBOL_EXPORT
 
-#include <boost/shared_ptr.hpp>
-#include <boost/function.hpp>
 #include <boost/asio/buffer.hpp>
 #include <boost/asio/streambuf.hpp>
-
-#include <boost/shared_ptr.hpp>
+#include <boost/function.hpp>
 #include <boost/make_shared.hpp>
-
-//#include <boost/variant.hpp>
-//#include <boost/regex.hpp>
-
+#include <boost/plugin/alias.hpp>
+#include <boost/shared_ptr.hpp>
+#include <boost/typeof/typeof.hpp>
 
 namespace eiptnd {
 
@@ -44,37 +40,22 @@ protected:
   boost::shared_ptr<plugin_api::api> api_;
 };
 
-interface* create();
-void destroy(plugin_api::interface* p);
-boost::shared_ptr<plugin_api::interface> create_shared();
+boost::shared_ptr<interface> create_shared();
 
 } // plugin_api
 
-typedef boost::shared_ptr<plugin_api::interface> plugin_api_ptr;
-typedef boost::function<plugin_api_ptr()> plugin_api_ptr_fn;
+typedef boost::shared_ptr<plugin_api::interface> plugin_interface_ptr;
+typedef boost::function<plugin_interface_ptr()> plugin_interface_ptr_fn;
+typedef BOOST_TYPEOF(&plugin_api::create_shared) create_shared_fn;
 
 } // namespace eiptnd
 
-#define DECLARE_PLUGIN(T)              \
-                                       \
-LIBRARY_API eiptnd::plugin_api::interface*     \
-create(void)                           \
-{                                      \
-  return new T();                      \
-}                                      \
-                                       \
-LIBRARY_API void                       \
-destroy(eiptnd::plugin_api::interface* p)      \
-{                                      \
-  delete p;                            \
-}                                      \
-LIBRARY_API boost::shared_ptr<eiptnd::plugin_api::interface>\
-create_shared(void)                                 \
-{                                                   \
-  return boost::make_shared<T>();                   \
-}                                                   \
+#define DECLARE_PLUGIN(T)                         \
+  LIBRARY_API eiptnd::plugin_interface_ptr        \
+  create_shared(void)                             \
+  { return boost::make_shared<T>(); }             \
+  BOOST_PLUGIN_ALIAS(create_shared, create_plugin)
 /// TODO: Prevent double usage
-/// TODO: Using in namespaces
 // DECLARE_PLUGIN
 
 #endif // PLUGIN_API_H

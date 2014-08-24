@@ -11,7 +11,7 @@ namespace eiptnd {
 tcp_server::tcp_server(boost::asio::io_service& io_service,
                const std::string& address, unsigned short port_num,
                plugin_factory& pf)
-  : log_(logging::keywords::channel = "net")
+  : log_(boost::log::keywords::channel = "net")
   , io_service_(io_service)
   , acceptor_(io_service)
   , new_connection_()

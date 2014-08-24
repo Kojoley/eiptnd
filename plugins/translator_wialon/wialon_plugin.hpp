@@ -1,13 +1,17 @@
 #ifndef WIALON_PLUGIN_HPP
 #define WIALON_PLUGIN_HPP
 
-#include "plugin_api.hpp"
-
+#include <iostream>
 #include <boost/array.hpp>
 #include <boost/property_tree/ptree.hpp>
 #include <boost/shared_ptr.hpp>
 #include <boost/container/flat_map.hpp>
 #include <boost/tuple/tuple.hpp>
+
+#include "log.hpp"
+#include "plugin_api.hpp"
+
+namespace eiptnd {
 
 class wialon_plugin
   : public plugin_api::interface
@@ -38,6 +42,9 @@ private:
   void store_data();
   void commit_command();
   void answer(const std::string& msg);
+
+  /// Logger instance and attributes.
+  logging::logger log_;
 
   /// Buffer for incoming data.
   /*boost::array<char, 8192> buffer_;*/
@@ -95,5 +102,7 @@ private:
 };
 
 DECLARE_PLUGIN(wialon_plugin)
+
+} // namespace eiptnd
 
 #endif // WIALON_PLUGIN_HPP

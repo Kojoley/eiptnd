@@ -1,14 +1,12 @@
 #include "connection.hpp"
 
 #include <boost/bind.hpp>
-#include <boost/weak_ptr.hpp>
-
 #include <boost/log/attributes.hpp>
 
 namespace eiptnd {
 
 connection::connection(boost::asio::io_service& io_service)
-  : log_(logging::keywords::channel = "connection")
+  : log_(boost::log::keywords::channel = "connection")
   , strand_(io_service)
   , socket_(io_service)
 {
