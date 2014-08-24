@@ -5,9 +5,6 @@
 #include <boost/log/sources/severity_channel_logger.hpp>
 #include <boost/log/sources/channel_logger.hpp>
 #include <boost/log/sources/record_ostream.hpp>
-#include <boost/log/sinks/async_frontend.hpp>
-#include <boost/log/sinks/text_ostream_backend.hpp>
-#include <boost/log/sinks/unbounded_ordering_queue.hpp>
 #include <boost/log/utility/record_ordering.hpp>
 
 namespace eiptnd {
@@ -27,23 +24,31 @@ enum severity_level {
 
 template <typename CharT, typename TraitsT>
 inline std::basic_ostream<CharT, TraitsT>& operator<< (
-    std::basic_ostream<CharT, TraitsT>& strm, const severity_level level);
+  std::basic_ostream<CharT, TraitsT>& os, const severity_level level)
+{
+  static const char* strings[] = {
+    "",
+    "CRIT",
+    "ERROR",
+    "WARN",
+    "NOTIFY",
+    "NORMAL",
+    "INFO",
+    "DEBUG",
+    "TRACE"
+  };
 
-typedef boost::log::sources::severity_channel_logger_mt<severity_level> logger;
-namespace keywords = boost::log::keywords;
-namespace sinks = boost::log::sinks;
+  os << strings[level / 0x200];
 
-typedef sinks::asynchronous_sink<
-  sinks::text_ostream_backend,
-  sinks::unbounded_ordering_queue<
-    boost::log::attribute_value_ordering<
-      std::size_t,
-      std::less<std::size_t>
-    >
-  >
-> sink_t;
+  if (level % 0x200) {
+    os << ":" << static_cast<std::size_t>(level);
+  }
 
-boost::shared_ptr<sink_t> init_logging();
+  return os;
+}
+
+//typedef boost::log::sources::severity_channel_logger_mt<severity_level> logger;
+typedef boost::log::sources::severity_channel_logger<severity_level> logger;
 
 } // namespace logging
 } // namespace eiptnd
