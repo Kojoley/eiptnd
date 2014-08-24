@@ -1,54 +1,43 @@
 project(eiptnd)
 cmake_minimum_required(VERSION 2.8)
-aux_source_directory(./src SRC_LIST)
-add_executable(${PROJECT_NAME} ${SRC_LIST})
 
-# Determine, whether we want a static binary
-SET(STATIC_LINKING TRUE CACHE BOOL "Build with static linking" FORCE)
+# Include required CMake modules
+set(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake)
+include(utils)
 
-IF(STATIC_LINKING)
-  SET(CMAKE_EXE_LINKER_FLAGS "-static")
-ENDIF(STATIC_LINKING)
+include_directories(include)
+aux_source_directory(src SRC_LIST_${PROJECT_NAME})
+add_executable(${PROJECT_NAME} ${SRC_LIST_${PROJECT_NAME}})
 
-# enable warnings
-#if (CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
-#  set_target_properties(${PROJECT_NAME} PROPERTIES COMPILE_FLAGS "/Wall")
-#elseif (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-#  set_target_properties(${PROJECT_NAME} PROPERTIES COMPILE_FLAGS "-Weverything")
-#elseif (CMAKE_CXX_COMPILER_ID MATCHES "GNU")
-#  set_target_properties(${PROJECT_NAME} PROPERTIES COMPILE_FLAGS "-Wall -Wextra")
-#endif()
+set(${PROJECT_NAME}_USE_UNITY_BUILD TRUE CACHE BOOL "Use unity build")
+set(${PROJECT_NAME}_USE_PRECOMPILED_HEADER TRUE CACHE BOOL "Use precompiled header")
+set(${PROJECT_NAME}_BUILD_PLUGINS FALSE CACHE BOOL "Build plugins")
+set(${PROJECT_NAME}_BUILD_EXAMPLES FALSE CACHE BOOL "Build examples")
+
+# Enable compiler warnings
+if(CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
+  set_property(TARGET ${PROJECT_NAME} APPEND PROPERTY COMPILE_FLAGS "/Wall")
+elseif(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+  set_property(TARGET ${PROJECT_NAME} APPEND PROPERTY COMPILE_FLAGS "-Weverything")
+elseif(CMAKE_CXX_COMPILER_ID MATCHES "GNU")
+  set_property(TARGET ${PROJECT_NAME} APPEND PROPERTY COMPILE_FLAGS "-Wall -Wextra -pedantic")
+endif()
 
 if(WIN32)
-  # http://stackoverflow.com/a/17845462
-  macro(get_WIN32_WINNT version)
-      if(WIN32 AND CMAKE_SYSTEM_VERSION)
-          set(ver ${CMAKE_SYSTEM_VERSION})
-          string(REPLACE "." "" ver ${ver})
-          string(REGEX REPLACE "([0-9])" "0\\1" ver ${ver})
-
-          set(${version} "0x${ver}")
-      endif()
-  endmacro()
-
   # Determine and define _WIN32_WINNT
-  get_WIN32_WINNT(ver)
-  add_definitions(-D_WIN32_WINNT=${ver})
-
+  init_winver()
   # Add windows related network library dependencies
   target_link_libraries(${PROJECT_NAME} wsock32 ws2_32)
+elseif(UNIX)
+  # Boost.Application needs dl library
+  target_link_libraries(${PROJECT_NAME} ${CMAKE_DL_LIBS})
 endif()
 
 # Setup Boost variables
 set(Boost_USE_MULTITHREADED ON)
-IF(STATIC_LINKING)
-  set(Boost_USE_STATIC_LIBS ON)
-  set(Boost_USE_STATIC_RUNTIME ON)
-else()
-  set(Boost_USE_STATIC_LIBS OFF)
-  set(Boost_USE_STATIC_RUNTIME OFF)
-  add_definitions(-DBOOST_ALL_DYN_LINK)
-endif()
+set(Boost_USE_STATIC_LIBS OFF)
+set(Boost_USE_STATIC_RUNTIME OFF)
+add_definitions(-DBOOST_ALL_DYN_LINK)
 # Enable showing linking boost libraries
 add_definitions(-DBOOST_LIB_DIAGNOSTIC)
 # Switch from using ASIO as header library to static library
@@ -58,17 +47,42 @@ add_definitions(-DBOOST_LIB_DIAGNOSTIC)
 # (boost::shared_ptr, boost::unordered_map and so on)
 add_definitions(-DBOOST_APPLICATION_FEATURE_NS_SELECT_BOOST)
 # Finally find Boost
-find_package(Boost 1.55 COMPONENTS
+find_package(Boost COMPONENTS
     system
     thread
     program_options
     filesystem
     log
     REQUIRED)
+include_directories(BEFORE SYSTEM ${Boost_INCLUDE_DIRS})
+target_link_libraries(${PROJECT_NAME} ${Boost_LIBRARIES})
 
-include_directories(./include ${Boost_INCLUDE_DIRS})
-target_link_libraries(${PROJECT_NAME} ${Boost_LIBRARIES} ${CMAKE_DL_LIBS})
+if(${${PROJECT_NAME}_USE_UNITY_BUILD} OR ${${PROJECT_NAME}_USE_PRECOMPILED_HEADER})
+  include(cotire OPTIONAL)
+  if(COMMAND cotire)
+    set_target_properties(${PROJECT_NAME} PROPERTIES COTIRE_ADD_UNITY_BUILD ${${PROJECT_NAME}_USE_UNITY_BUILD})
+    set_target_properties(${PROJECT_NAME} PROPERTIES COTIRE_ENABLE_PRECOMPILED_HEADER ${${PROJECT_NAME}_USE_PRECOMPILED_HEADER})
+    if(NOT ${CMAKE_VERSION} VERSION_LESS 2.8.11)
+      set_target_properties(${PROJECT_NAME} PROPERTIES
+                            COTIRE_UNITY_LINK_LIBRARIES_INIT "COPY_UNITY")
+    endif()
+    cotire(${PROJECT_NAME})
+  else()
+    message(WARNING "Can't load 'cotire' module from ${CMAKE_MODULE_PATH}")
+  endif()
+endif()
 
-#add_subdirectory(./plugins)
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR})
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR})
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR})
 
-#-DCMAKE_BUILD_TYPE=Debug
+if(${${PROJECT_NAME}_BUILD_PLUGINS})
+  add_subdirectory(plugins)
+endif()
+
+if(${${PROJECT_NAME}_BUILD_EXAMPLES})
+  add_subdirectory(example)
+endif()
+
+#-DCMAKE_BUILD_TYPE=Debug -DUSE_UNITY_BUILD=FALSE -DUSE_PRECOMPILED_HEADER=FALSE
+
