@@ -2,15 +2,19 @@
 #define CONNECTION_HPP
 
 #include <boost/asio/io_service.hpp>
+#include <boost/asio/ip/tcp.hpp>
+#include <boost/asio/strand.hpp>
 #include <boost/enable_shared_from_this.hpp>
 #include <boost/noncopyable.hpp>
 #include <boost/shared_ptr.hpp>
 
-#include "plugin_api.hpp"
-#include "plugin_factory.hpp"
+#include "core.hpp"
 #include "log.hpp"
+#include "plugin_api.hpp"
 
 namespace eiptnd {
+
+class plugin_factory;
 
 /// Represents a single connection from a client.
 class connection
@@ -18,14 +22,14 @@ class connection
   , private boost::noncopyable
 {
 public:
-  explicit connection(boost::asio::io_service& io_service);
+  explicit connection(core& core);
   ~connection();
 
   /// Get the socket associated with the connection.
   boost::asio::ip::tcp::socket& socket();
 
   /// Start the first asynchronous operation for the connection.
-  void on_connection(plugin_factory& plugin_factory_);
+  void on_connection();
 
   /// Initiate graceful connection closure.
   void close();
@@ -49,6 +53,9 @@ private:
   logging::logger log_;
   boost::log::attribute_set::iterator net_raddr_;
 
+  ///
+  core& core_;
+
   /// Strand to ensure the connection's handlers are not called concurrently.
   boost::asio::io_service::strand strand_;
 
@@ -56,8 +63,7 @@ private:
   boost::asio::ip::tcp::socket socket_;
 
   /// The handler used to process the data.
-  plugin_interface_ptr process_handler_;
-
+  boost::shared_ptr<plugin_api::translator> process_handler_;
 };
 
 typedef boost::shared_ptr<connection> connection_ptr;

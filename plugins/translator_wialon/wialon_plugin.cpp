@@ -18,10 +18,9 @@
 
 namespace eiptnd {
 
-//using boost::property_tree::json_parser::create_escapes;
-using namespace boost::property_tree::json_parser;
+using boost::property_tree::json_parser::create_escapes;
 
-/*template <typename CharT, typename TraitsT>
+template <typename CharT, typename TraitsT>
 inline std::basic_ostream<CharT, TraitsT>& operator<< (
   std::basic_ostream<CharT, TraitsT>& os, const wialon_plugin::state_t state)
 {
@@ -40,7 +39,7 @@ inline std::basic_ostream<CharT, TraitsT>& operator<< (
   };
 
   return os << strings[state];
-}*/
+}
 
 #pragma push_macro("_")
 #undef _
@@ -87,6 +86,8 @@ wialon_plugin::fields_t wialon_plugin::fields_ = boost::assign::list_of<fields_s
 
 wialon_plugin::wialon_plugin()
   : log_(boost::log::keywords::channel = "plugin2")
+  , authenticate_callback_(boost::bind(&wialon_plugin::handle_authenticate, this, _1))
+  , process_data_callback_(boost::bind(&wialon_plugin::handle_process_data, this, _1))
 {
   BOOST_LOG_SEV(log_, logging::trace) << name() << " created";
 
@@ -144,7 +145,7 @@ void wialon_plugin::handle_read(std::size_t bytes_transferred)
     api_->do_read_until(sbuf_, "\r\n");
   }
   else {
-    /// Read estimate_ bytes;
+    /// Read (estimate_ - sbuf_.size()) bytes
   }
 }
 
@@ -160,7 +161,7 @@ void wialon_plugin::parse_string(const std::string& msg)
   BOOST_FOREACH(const std::string& tok, tokens) {
     BOOST_LOG_SEV(log_, logging::trace)
       << "[Parser::Consume] size: " << tok.size()
-      << "token: " << create_escapes(msg);
+      << " token: " << create_escapes(tok);
 
     consume_token(tok);
   }
@@ -172,14 +173,13 @@ void wialon_plugin::consume_token(const std::string& tok)
     switch (state_) {
     case STATE_BODY: {
       if (current_cmd_ != COMMAND_BLACKBOX) {
-        store_data();
         parser_error("Unexpected end of body (still remaining " + boost::lexical_cast<std::string>(estimate_) + " parameters)");
+        commit_command();
         break;
       }
       /// Fall through
     case STATE_BAR:
       store_data();
-      ++multicommand_;
       /// Fall through
     case STATE_SKIP_TO_BAR_OR_END:
       commit_command();
@@ -212,15 +212,14 @@ void wialon_plugin::consume_token(const std::string& tok)
   case STATE_INITIAL:
     //tree_.reset(boost::make_shared<boost::property_tree::ptree>());
     boost::make_shared<boost::property_tree::ptree>().swap(tree_);
+    is_parser_error_ = false;
     multicommand_ = 0;
-    imei_ = "unknown";
-    cmd_ = "not initialized";
+    cmd_ = "<not initialized>";
     /// Fall through
   case STATE_IMEI:
     /// TODO: Can imei be changed during session?
     /*if (udp == protocol && !authenticated_) {
       /// TODO: Call API to set connection guid
-      imei_ = tok;
       authenticated_ = true;
     }*/
     BOOST_LOG_SEV(log_, logging::trace)
@@ -259,7 +258,8 @@ void wialon_plugin::consume_token(const std::string& tok)
   case STATE_BODY:
     if (current_cmd_ == COMMAND_BLACKBOX  && "|" == tok) {
       store_data();
-      ++multicommand_;
+      boost::tie(estimate_, current_cmd_) = estimates_.at(cmd_);
+      boost::make_shared<boost::property_tree::ptree>().swap(tree_);
       break;
     }
 
@@ -299,7 +299,6 @@ void wialon_plugin::consume_token(const std::string& tok)
       unexpected_token("|", tok);
     }
     store_data();
-    ++multicommand_;
     break;
 
   case STATE_SKIP_TO_BAR_OR_END:
@@ -324,6 +323,8 @@ void wialon_plugin::unexpected_token(const std::string& expected,
 void wialon_plugin::parser_error(const std::string& message)
 {
   BOOST_LOG_SEV(log_, logging::trace) << "[Parser::Error] " << message;
+
+  is_parser_error_ = true;
 }
 
 void wialon_plugin::commit_command()
@@ -335,34 +336,34 @@ void wialon_plugin::commit_command()
 
   switch (current_cmd_) {
   case COMMAND_LOGIN:
-    BOOST_LOG_SEV(log_, logging::trace)
-      << "Logining with " << tree_->get<std::string>("imei") << ":" << tree_->get<std::string>("password");
-    answer("1");authenticated_ = true; // FIXME: REMOVE ME
-    /// TODO: Check for brute-force attack!?
-    /*if (parse error) {
+    if (is_parser_error_) {
       answer("0");
     }
     else {
-      api->check_credentials(
+      api_->authenticate(
           tree_->get<std::string>("imei"),
           tree_->get<std::string>("password"),
-          boost::bind(&wialon_plugin::handle_check_credentials,
-                      weak_ptr(shared_from_this()), _1))
-      imei_ = tok;
-    }*/
+          authenticate_callback_);
+    }
     break;
+
   case COMMAND_SHORTDATA:
   case COMMAND_DATA:
-    //if (ok) answer("1")
+    store_data();
     break;
+
   case COMMAND_PING:
     answer("");
     break;
+
   case COMMAND_MESSAGE:
+    store_data();
     break;
+
   case COMMAND_BLACKBOX:
     answer(boost::lexical_cast<std::string>(multicommand_));
     break;
+
   case COMMAND_IMAGE:
     state_ = STATE_BINARY_DATA;
     /// TODO: Check size for safety
@@ -375,7 +376,7 @@ void wialon_plugin::commit_command()
 
 void wialon_plugin::store_data()
 {
-  commit_command();
+  api_->process_data(tree_, process_data_callback_);
 }
 
 void wialon_plugin::answer(const std::string& msg)
@@ -385,19 +386,44 @@ void wialon_plugin::answer(const std::string& msg)
   reply.append(cmd_).append("#").append(msg);
   std::copy(reply.begin(), reply.end(), answer_buffer_.begin());
 
+  BOOST_LOG_SEV(log_, logging::trace) << "Responding with reply: " << reply;
+
   api_->do_write(boost::asio::buffer(answer_buffer_));
 }
 
-/*void wialon_plugin::handle_check_credentials(bool ok)
+void wialon_plugin::handle_authenticate(bool ok)
 {
+  state_ = STATE_INITIAL;
   if (ok) {
+    BOOST_LOG_SEV(log_, logging::trace) << "Authentication is successful";
     authenticated_ = true;
     answer("1");
   }
   else {
+    BOOST_LOG_SEV(log_, logging::trace) << "Authentication is rejected";
     answer("01");
     /// TODO: Close connection?
   }
-}*/
+}
+
+void wialon_plugin::handle_process_data(bool ok)
+{
+  if (current_cmd_ == COMMAND_BLACKBOX) {
+    /// TODO: Should we check for is ok?
+    ++multicommand_;
+  }
+  else if (ok) {
+    /// TODO: It can be other because of is_parser_error_
+    answer("1");
+  }
+  else {
+    if (current_cmd_ == COMMAND_DATA || current_cmd_ == COMMAND_SHORTDATA) {
+      answer("-1");
+    }
+    else {
+      answer("0");
+    }
+  }
+}
 
 } // namespace eiptnd

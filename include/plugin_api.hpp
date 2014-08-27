@@ -8,34 +8,54 @@
 #include <boost/function.hpp>
 #include <boost/make_shared.hpp>
 #include <boost/plugin/alias.hpp>
+#include <boost/property_tree/ptree.hpp>
 #include <boost/shared_ptr.hpp>
+#include <boost/signals2/signal.hpp>
 #include <boost/typeof/typeof.hpp>
 
 namespace eiptnd {
 
 namespace plugin_api {
 
-class api
-{
-public:
-  //typedef boost::variant</*MatchCondition,*/ char, const std::string/*, const boost::regex*/> read_condition_t;
+typedef enum {
+  PLUGIN_TRANSLATOR,
+  PLUGIN_DISPATCHER
+} plugin_type;
 
+typedef boost::signals2::signal<void(bool)>::slot_type authenticate_callback;
+typedef boost::signals2::signal<void(bool)>::slot_type process_data_callback;
+
+struct api
+{
+  //typedef boost::variant</*MatchCondition,*/ char, const std::string/*, const boost::regex*/> read_condition_t;
   boost::function<void(boost::asio::streambuf&, const std::string& delim)> do_read_until;
   boost::function<void(const boost::asio::mutable_buffer&)> do_read_some;
   boost::function<void(const boost::asio::const_buffer&)> do_write;
+
+  boost::function<void(std::string, std::string, authenticate_callback)> authenticate;
+  boost::function<void(boost::shared_ptr<boost::property_tree::ptree>, process_data_callback)> process_data;
 };
 
 class interface
 {
 public:
   /*interface(boost::shared_ptr<plugin_api::api> papi) : api_(papi) {};*/
-  virtual ~interface(){};
-  virtual const char* name() { return "N/A"; };
-  virtual const char* version() { return "N/A"; };
+  virtual ~interface() {}
+  virtual plugin_type ptype() = 0;
+  virtual const char* uid() = 0;
+  virtual const char* name() = 0;
+  virtual const char* version() = 0;
+};
+
+class translator
+  : public interface
+{
+public:
+  virtual plugin_type ptype() { return PLUGIN_TRANSLATOR; }
   virtual void handle_start() = 0;
   virtual void handle_read(std::size_t bytes_transferred) = 0;
   virtual void handle_write() = 0;
-  void setup_api(boost::shared_ptr<plugin_api::api> p) { api_ = p; };
+  void setup_api(boost::shared_ptr<plugin_api::api> p) { api_ = p; }
 protected:
   boost::shared_ptr<plugin_api::api> api_;
 };

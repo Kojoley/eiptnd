@@ -1,21 +1,21 @@
 #include "tcp_server.hpp"
 
-#include <boost/asio.hpp>
 #include <boost/bind.hpp>
 #include <boost/foreach.hpp>
 #include <boost/shared_ptr.hpp>
 #include <boost/thread/thread.hpp>
 
+#include "core.hpp"
+#include "plugin_factory.hpp"
+
 namespace eiptnd {
 
-tcp_server::tcp_server(boost::asio::io_service& io_service,
-               const std::string& address, unsigned short port_num,
-               plugin_factory& pf)
+tcp_server::tcp_server(core& core,
+               const std::string& address, unsigned short port_num)
   : log_(boost::log::keywords::channel = "net")
-  , io_service_(io_service)
-  , acceptor_(io_service)
+  , core_(core)
+  , acceptor_(core_.get_ios())
   , new_connection_()
-  , plugin_factory_(pf)
 {
   using namespace boost::asio::ip;
 
@@ -33,7 +33,7 @@ tcp_server::start_accept()
   BOOST_LOG_SEV(log_, logging::trace) << "start_accept()";
 
   /// TODO: Maybe replace with make_shared<T>(...).swap(&T)?
-  new_connection_.reset(new connection(io_service_));
+  new_connection_.reset(new connection(core_));
   acceptor_.async_accept(new_connection_->socket(),
       boost::bind(&tcp_server::handle_accept, this, _1));
 }
@@ -45,7 +45,7 @@ tcp_server::handle_accept(const boost::system::error_code& ec)
 
   if (!ec) {
     /// TODO: Check for black list
-    new_connection_->on_connection(plugin_factory_);
+    new_connection_->on_connection();
   }
   else {
     BOOST_LOG_SEV(log_, logging::error)

@@ -3,6 +3,7 @@
 
 #include <iostream>
 #include <boost/array.hpp>
+#include <boost/atomic/atomic.hpp>
 #include <boost/property_tree/ptree.hpp>
 #include <boost/shared_ptr.hpp>
 #include <boost/container/flat_map.hpp>
@@ -14,16 +15,18 @@
 namespace eiptnd {
 
 class wialon_plugin
-  : public plugin_api::interface
+  : public plugin_api::translator
 {
 public:
   wialon_plugin();
 
   ~wialon_plugin();
 
-  const char* name() { return "Wialon IPS"; };
+  const char* uid() { return "wialon"; }
 
-  const char* version() { return "0.1.0"; };
+  const char* name() { return "Wialon IPS"; }
+
+  const char* version() { return "1.1"; }
 
   /// Handle completion of a start operation.
   void handle_start();
@@ -39,31 +42,38 @@ private:
   void consume_token(const std::string& tok);
   void unexpected_token(const std::string& expected, const std::string& got);
   void parser_error(const std::string& message);
-  void store_data();
   void commit_command();
+  void store_data();
   void answer(const std::string& msg);
+  void handle_authenticate(bool ok);
+  void handle_process_data(bool ok);
 
   /// Logger instance and attributes.
   logging::logger log_;
 
   /// Buffer for incoming data.
   /*boost::array<char, 8192> buffer_;*/
+  boost::asio::streambuf sbuf_;
 
   /// Buffer for outgoing data.
   boost::array<char, 32> answer_buffer_;
 
-  boost::asio::streambuf sbuf_;
-
-  /// Estimate tokens to read.
-  //std::size_t estimate_tokens_;
-
-  boost::shared_ptr<boost::property_tree::ptree> tree_;
-  std::size_t multicommand_;
+  /// Estimate tokens/bytes to read.
   std::size_t estimate_;
-  std::string imei_;
-  std::string cmd_;
+
+  /// Tree for storing data by parser that will be processed by dispatcher
+  boost::shared_ptr<boost::property_tree::ptree> tree_;
+
+  /// COMMAND_BLACKBOX parsed (and stored) data blocks
+  boost::atomic<std::size_t> multicommand_;
+
+  /// Authenticatiin status
   bool authenticated_;
 
+  /// Flag of the error that occurred during the parsing
+  bool is_parser_error_;
+
+  /// Parser state
   enum state_t {
     STATE_INITIAL,
     STATE_IMEI,
@@ -78,6 +88,8 @@ private:
     STATE_BINARY_DATA
   } state_;
 
+  /// Parsed command
+  std::string cmd_;
   enum command_t {
     COMMAND_LOGIN,
     COMMAND_DATA,
@@ -90,15 +102,21 @@ private:
     COMMAND_COUNT
   } current_cmd_;
 
+  /// Estimate tokens to consume in STATE_BODY
   typedef const boost::container::flat_map<std::string, boost::tuple<std::size_t, command_t> > estimates_t;
   static estimates_t estimates_;
 
-
-  //typedef const char* fields_type;
+  /// Names fo tokens consumed in STATE_BODY
   typedef std::string fields_type;
   typedef std::vector<fields_type> fields_subtype;
   typedef const boost::array<fields_subtype, COMMAND_COUNT> fields_t;
   static fields_t fields_;
+
+  /// Callback for authentication request
+  plugin_api::authenticate_callback authenticate_callback_;
+
+  /// Callback for data processing request
+  plugin_api::process_data_callback process_data_callback_;
 };
 
 DECLARE_PLUGIN(wialon_plugin)

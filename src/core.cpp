@@ -15,7 +15,6 @@
 #include <boost/log/sinks/unbounded_ordering_queue.hpp>
 #include <boost/make_shared.hpp>
 
-#include "plugin_factory.hpp"
 #include "tcp_server.hpp"
 #include "log.hpp"
 
@@ -78,6 +77,7 @@ core::core(app::context& context, boost::program_options::variables_map& vm)
   , vm_(vm)
   , thread_pool_size_(vm_["num-threads"].as<std::size_t>())
   , io_service_(thread_pool_size_)
+  , plugin_factory_()
 {
 }
 
@@ -87,11 +87,7 @@ core::operator()()
   boost::shared_ptr<app::path> pt = context_.find<app::path>();
   boost::shared_ptr<sink_t> sink_ = init_logging();
 
-  plugin_factory plugin_factory_;
   plugin_factory_.load_dir(pt->executable_path());
-
-  boost::shared_ptr<app::run_mode> modes
-    = context_.find<app::run_mode>();
 
   /// TODO: Replace with intrusive list
   typedef boost::shared_ptr<tcp_server> server_ptr;
@@ -110,8 +106,7 @@ core::operator()()
           << "Create TCP server at " << address << ":" << port_num;
         servers.emplace_back(
             boost::make_shared<tcp_server>(
-                boost::ref(io_service_), address, port_num,
-                boost::ref(plugin_factory_)));
+                boost::ref(*this), address, port_num));
       }
       //BOOST_FOREACH(std::string port, udp_ports) {
       //}

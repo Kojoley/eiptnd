@@ -1,14 +1,18 @@
 #include "connection.hpp"
 
 #include <boost/bind.hpp>
+#include <boost/foreach.hpp>
 #include <boost/log/attributes.hpp>
+
+#include "plugin_factory.hpp"
 
 namespace eiptnd {
 
-connection::connection(boost::asio::io_service& io_service)
+connection::connection(core& core)
   : log_(boost::log::keywords::channel = "connection")
-  , strand_(io_service)
-  , socket_(io_service)
+  , core_(core)
+  , strand_(core_.get_ios())
+  , socket_(core_.get_ios())
 {
   /// NOTE: There is no real conection here, only waiting for it.
 }
@@ -26,7 +30,7 @@ boost::asio::ip::tcp::socket& connection::socket()
 }
 
 void
-connection::on_connection(plugin_factory& plugin_factory_)
+connection::on_connection()
 {
   boost::asio::ip::tcp::endpoint local_endpoint = socket_.local_endpoint();
   boost::asio::ip::tcp::endpoint remote_endpoint = socket_.remote_endpoint();
@@ -43,8 +47,19 @@ connection::on_connection(plugin_factory& plugin_factory_)
   papi->do_read_until = boost::bind(&connection::do_read_until, this, _1, _2);
   papi->do_read_some = boost::bind(&connection::do_read_some, this, _1);
   papi->do_write = boost::bind(&connection::do_write, this, _1);
+  request_router& rr = core_.get_rr();
+  papi->authenticate = boost::bind(&request_router::authenticate, rr, remote_endpoint.address(), _1, _2, _3);
+  papi->process_data = boost::bind(&request_router::process_data, rr, _1, _2);
 
-  process_handler_ = plugin_factory_.create(local_endpoint.port());
+  plugin_factory& pf = core_.get_pf();
+  std::string puid;
+  BOOST_AUTO(it, pf.tanslators_on_port(local_endpoint.port()));
+  BOOST_FOREACH(plugin_factory::plugin_ports_t::value_type i, it) {
+    BOOST_LOG_SEV(log_, logging::trace) << i.first << ":" << i.second;
+    puid = i.second;
+  }
+
+  process_handler_ = boost::dynamic_pointer_cast<plugin_api::translator>(pf.create(puid));
   process_handler_->setup_api(papi);
   process_handler_->handle_start();
 
@@ -87,27 +102,22 @@ void
 connection::handle_read(const boost::system::error_code& ec,
     std::size_t bytes_transferred)
 {
-  /*if (!ec) {
-    if (bytes_transferred) {
-      /// readed `bytes_transferred` bytes
-    }
-    else {
-      /// happens if called close on socket, or ???
-    }
-  }
-  else if (ec == boost::asio::error::eof) {
-    /// remote endpoint has closed connection
-  }
-  else if (ec == boost::asio::error::operation_aborted) {
-    /// connection unexpectedly closed
-  }
-  else {
-    /// error has occurred
-  }*/
-
-
   if (!ec) {
     process_handler_->handle_read(bytes_transferred);
+  }
+  else if (ec == boost::asio::error::eof) {
+    BOOST_LOG_SEV(log_, logging::info)
+      << "Connection has been closed by the remote endpoint";
+
+    if (bytes_transferred) {
+      /// TODO: Is it so?
+      BOOST_LOG_SEV(log_, logging::info)
+        << "But some data was recieved (" << bytes_transferred << " bytes)";
+    }
+  }
+  else if (ec == boost::asio::error::operation_aborted) {
+    BOOST_LOG_SEV(log_, logging::info)
+      << "Connection unexpectedly closed";
   }
   else {
     BOOST_LOG_SEV(log_, logging::error)

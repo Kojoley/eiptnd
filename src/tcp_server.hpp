@@ -1,25 +1,25 @@
 #ifndef SERVER_HPP
 #define SERVER_HPP
 
+#include <boost/asio/io_service.hpp>
+#include <boost/asio/ip/tcp.hpp>
 /*#include <boost/move/move.hpp>*/
 #include <boost/noncopyable.hpp>
 #include <boost/shared_ptr.hpp>
 
 #include "connection.hpp"
-#include "plugin_factory.hpp"
 #include "log.hpp"
 
 namespace eiptnd {
+
+class core;
 
 class tcp_server
   : private boost::noncopyable
 {
 public:
-  /// Construct the server to listen on the specified TCP address and port, and
-  /// serve up files from the given directory.
-  explicit tcp_server(boost::asio::io_service& io_service,
-                  const std::string& address, unsigned short port_num,
-                  plugin_factory& pf);
+  explicit tcp_server(core& core,
+                  const std::string& address, unsigned short port_num);
 
   /*server(BOOST_RV_REF(server) x)            /// Move ctor
      : thread_pool_size_(x.thread_pool_size_)
@@ -46,16 +46,14 @@ private:
   /// Logger channels and attributes.
   logging::logger log_;
 
-  /// The io_service used to perform asynchronous operations.
-  boost::asio::io_service& io_service_;
+  ///
+  core& core_;
 
   /// Acceptor used to listen for incoming connections.
   boost::asio::ip::tcp::acceptor acceptor_;
 
   /// The next connection to be accepted.
   connection_ptr new_connection_;
-
-  plugin_factory& plugin_factory_;
 };
 
 } // namespace eiptnd
