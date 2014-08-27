@@ -7,6 +7,11 @@ include(utils)
 
 include_directories(include)
 aux_source_directory(src SRC_LIST_${PROJECT_NAME})
+
+# Hack for project file listing in Qt Creator
+file(GLOB INCLUDE_LIST_${PROJECT_NAME} RELATIVE ${CMAKE_SOURCE_DIR} "include/*.h??")
+list(APPEND SRC_LIST_${PROJECT_NAME} ${INCLUDE_LIST_${PROJECT_NAME}})
+
 add_executable(${PROJECT_NAME} ${SRC_LIST_${PROJECT_NAME}})
 
 set(${PROJECT_NAME}_USE_UNITY_BUILD TRUE CACHE BOOL "Use unity build")
