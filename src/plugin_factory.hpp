@@ -1,13 +1,13 @@
 #ifndef PLUGIN_FACTORY_HPP
 #define PLUGIN_FACTORY_HPP
 
-#include <boost/application.hpp>
-#include <boost/function.hpp>
-#include <boost/container/flat_map.hpp>
-
 #include "plugin_api.hpp"
 #include "plugin_info.hpp"
 #include "log.hpp"
+
+#include <boost/application.hpp>
+#include <boost/function.hpp>
+#include <boost/container/flat_map.hpp>
 
 namespace eiptnd {
 

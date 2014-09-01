@@ -1,8 +1,8 @@
+#include "plugin_factory.hpp"
+
 #include <boost/foreach.hpp>
 #include <boost/log/utility/manipulators/add_value.hpp>
 #include <boost/throw_exception.hpp>
-
-#include "plugin_factory.hpp"
 
 namespace eiptnd {
 

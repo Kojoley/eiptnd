@@ -1,11 +1,11 @@
 #ifndef ECHO_PLUGIN_HPP
 #define ECHO_PLUGIN_HPP
 
-#include <iostream>
-#include <boost/array.hpp>
-
 #include "log.hpp"
 #include "plugin_api.hpp"
+
+#include <iostream>
+#include <boost/array.hpp>
 
 namespace eiptnd {
 

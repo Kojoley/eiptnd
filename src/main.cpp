@@ -1,3 +1,6 @@
+#include "config.hpp"
+#include "core.hpp"
+
 #include <iostream>
 #include <string>
 #include <boost/application.hpp>
@@ -6,9 +9,6 @@
 #if defined(BOOST_WINDOWS_API)
 #  include "windows/setup/service_setup.hpp"
 #endif
-
-#include "config.hpp"
-#include "core.hpp"
 
 int main(int argc, char* argv[])
 {

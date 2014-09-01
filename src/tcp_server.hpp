@@ -1,14 +1,14 @@
 #ifndef SERVER_HPP
 #define SERVER_HPP
 
+#include "connection.hpp"
+#include "log.hpp"
+
 #include <boost/asio/io_service.hpp>
 #include <boost/asio/ip/tcp.hpp>
 /*#include <boost/move/move.hpp>*/
 #include <boost/noncopyable.hpp>
 #include <boost/shared_ptr.hpp>
-
-#include "connection.hpp"
-#include "log.hpp"
 
 namespace eiptnd {
 

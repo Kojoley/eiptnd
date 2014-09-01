@@ -1,13 +1,13 @@
 #ifndef CORE_HPP
 #define CORE_HPP
 
-#include <boost/application/context.hpp>
-#include <boost/asio/io_service.hpp>
-#include <boost/program_options/variables_map.hpp>
-
 #include "log.hpp"
 #include "plugin_factory.hpp"
 #include "request_router.hpp"
+
+#include <boost/application/context.hpp>
+#include <boost/asio/io_service.hpp>
+#include <boost/program_options/variables_map.hpp>
 
 typedef std::vector<std::string> string_vector;
 

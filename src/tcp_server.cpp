@@ -1,12 +1,12 @@
 #include "tcp_server.hpp"
 
+#include "core.hpp"
+#include "plugin_factory.hpp"
+
 #include <boost/bind.hpp>
 #include <boost/foreach.hpp>
 #include <boost/shared_ptr.hpp>
 #include <boost/thread/thread.hpp>
-
-#include "core.hpp"
-#include "plugin_factory.hpp"
 
 namespace eiptnd {
 

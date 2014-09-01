@@ -1,13 +1,13 @@
 #ifndef REQUEST_ROUTER_HPP
 #define REQUEST_ROUTER_HPP
 
+#include "log.hpp"
+#include "plugin_api.hpp"
+
 #include <string>
 #include <boost/asio/ip/address.hpp>
 #include <boost/property_tree/ptree.hpp>
 #include <boost/shared_ptr.hpp>
-
-#include "log.hpp"
-#include "plugin_api.hpp"
 
 namespace eiptnd {
 

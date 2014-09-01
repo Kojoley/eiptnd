@@ -1,10 +1,11 @@
 #include "connection.hpp"
 
+#include "core.hpp"
+#include "plugin_factory.hpp"
+
 #include <boost/bind.hpp>
 #include <boost/foreach.hpp>
 #include <boost/log/attributes.hpp>
-
-#include "plugin_factory.hpp"
 
 namespace eiptnd {
 

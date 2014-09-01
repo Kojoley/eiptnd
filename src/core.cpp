@@ -1,5 +1,8 @@
 #include "core.hpp"
 
+#include "tcp_server.hpp"
+#include "log.hpp"
+
 #include <boost/bind.hpp>
 #include <boost/foreach.hpp>
 #include <boost/container/vector.hpp>
@@ -14,9 +17,6 @@
 #include <boost/log/sinks/text_ostream_backend.hpp>
 #include <boost/log/sinks/unbounded_ordering_queue.hpp>
 #include <boost/make_shared.hpp>
-
-#include "tcp_server.hpp"
-#include "log.hpp"
 
 namespace eiptnd {
 

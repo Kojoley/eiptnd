@@ -1,6 +1,9 @@
 #ifndef WIALON_PLUGIN_HPP
 #define WIALON_PLUGIN_HPP
 
+#include "log.hpp"
+#include "plugin_api.hpp"
+
 #include <iostream>
 #include <boost/array.hpp>
 #include <boost/atomic/atomic.hpp>
@@ -8,9 +11,6 @@
 #include <boost/shared_ptr.hpp>
 #include <boost/container/flat_map.hpp>
 #include <boost/tuple/tuple.hpp>
-
-#include "log.hpp"
-#include "plugin_api.hpp"
 
 namespace eiptnd {
 

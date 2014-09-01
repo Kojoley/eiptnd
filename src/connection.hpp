@@ -1,6 +1,9 @@
 #ifndef CONNECTION_HPP
 #define CONNECTION_HPP
 
+#include "log.hpp"
+#include "plugin_api.hpp"
+
 #include <boost/asio/io_service.hpp>
 #include <boost/asio/ip/tcp.hpp>
 #include <boost/asio/strand.hpp>
@@ -8,11 +11,9 @@
 #include <boost/noncopyable.hpp>
 #include <boost/shared_ptr.hpp>
 
-#include "core.hpp"
-#include "log.hpp"
-#include "plugin_api.hpp"
-
 namespace eiptnd {
+
+class core;
 
 class plugin_factory;
 
