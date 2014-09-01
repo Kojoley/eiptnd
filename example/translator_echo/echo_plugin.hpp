@@ -10,16 +10,18 @@
 namespace eiptnd {
 
 class echo_plugin
-  : public plugin_api::interface
+  : public plugin_api::translator
 {
 public:
   echo_plugin();
 
   ~echo_plugin();
 
-  const char* name() { return "Echo Example"; };
+  const char* uid() { return "echo-example"; }
 
-  const char* version() { return "0.1.0"; };
+  const char* name() { return "Echo Example"; }
+
+  const char* version() { return "0.1"; }
 
   /// Handle completion of a start operation.
   void handle_start();
