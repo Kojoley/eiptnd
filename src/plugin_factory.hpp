@@ -3,6 +3,7 @@
 
 #include "plugin_api.hpp"
 #include "plugin_info.hpp"
+#include "translator_manager.hpp"
 #include "log.hpp"
 
 #include <boost/application.hpp>
@@ -11,15 +12,12 @@
 
 namespace eiptnd {
 
+class translator_manager;
+
 class plugin_factory
 {
 public:
-  typedef std::string puid_t;
-  typedef boost::container::flat_multimap<unsigned short, puid_t> plugin_ports_t;
-
-  plugin_factory()
-    : log_(boost::log::keywords::channel = "plugin-factory")
-  {};
+  plugin_factory();
 
   /// Load plugin from specified path to it.
   void load(const boost::filesystem::path& path_name);
@@ -30,18 +28,17 @@ public:
   /// Create plugin instance.
   plugin_interface_ptr create(puid_t puid);
 
-  bool bind_translator_to_port(unsigned short port_num, const puid_t uid);
-
-  boost::iterator_range<plugin_ports_t::const_iterator>
-  tanslators_on_port(const unsigned short port_num);
+  translator_manager& get_tm() { return translator_manager_; }
 
 private:
   /// Logger instance and channels.
   logging::logger log_;
 
   ///
+  translator_manager translator_manager_;
+
+  ///
   boost::container::flat_map<puid_t, plugin_info_ptr> plugins_;
-  plugin_ports_t plugin_ports_;
 };
 
 } // namespace eiptnd

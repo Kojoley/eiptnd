@@ -52,15 +52,15 @@ connection::on_connection()
   papi->authenticate = boost::bind(&request_router::authenticate, rr, remote_endpoint.address(), _1, _2, _3);
   papi->process_data = boost::bind(&request_router::process_data, rr, _1, _2);
 
-  plugin_factory& pf = core_.get_pf();
+  translator_manager& tm = core_.get_pf().get_tm();
   std::string puid;
-  BOOST_AUTO(it, pf.tanslators_on_port(local_endpoint.port()));
-  BOOST_FOREACH(plugin_factory::plugin_ports_t::value_type i, it) {
+  BOOST_AUTO(it, tm.list_port(local_endpoint.port()));
+  BOOST_FOREACH(translator_manager::port_mapping_t::value_type i, it) {
     BOOST_LOG_SEV(log_, logging::trace) << i.first << ":" << i.second;
     puid = i.second;
   }
 
-  process_handler_ = boost::dynamic_pointer_cast<plugin_api::translator>(pf.create(puid));
+  process_handler_ = tm.create(puid);
   process_handler_->setup_api(papi);
   process_handler_->handle_start();
 

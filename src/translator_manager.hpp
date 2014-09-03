@@ -1,0 +1,42 @@
+#ifndef TRANSLATOR_MANAGER_HPP
+#define TRANSLATOR_MANAGER_HPP
+
+#include "plugin_api.hpp"
+#include "plugin_info.hpp"
+#include "log.hpp"
+
+#include <boost/container/flat_map.hpp>
+#include <boost/range/iterator_range_core.hpp>
+
+namespace eiptnd {
+
+class plugin_factory;
+
+class translator_manager
+{
+public:
+  typedef boost::container::flat_multimap<unsigned short, puid_t> port_mapping_t;
+  typedef boost::iterator_range<port_mapping_t::const_iterator> iterator_range;
+
+  translator_manager();
+
+  void add(plugin_info_ptr info);
+
+  plugin_translator_ptr create(puid_t uid);
+
+  bool map_port(unsigned short port_num, const puid_t uid);
+
+  iterator_range list_port(const unsigned short port_num);
+
+private:
+  /// Logger instance and attributes.
+  logging::logger log_;
+
+  boost::container::flat_multimap<puid_t, plugin_info_ptr> loaded_translators_;
+  port_mapping_t port_mapping_;
+
+};
+
+} // namespace eiptnd
+
+#endif // TRANSLATOR_MANAGER_HPP

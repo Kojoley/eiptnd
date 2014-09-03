@@ -6,6 +6,11 @@
 
 namespace eiptnd {
 
+plugin_factory::plugin_factory()
+  : log_(boost::log::keywords::channel = "plugin-factory")
+{
+}
+
 void
 plugin_factory::load(const boost::filesystem::path& path_name)
 {
@@ -13,14 +18,29 @@ plugin_factory::load(const boost::filesystem::path& path_name)
   BOOST_AUTO(pinfo, boost::make_shared<plugin_info>(path_name));
   /// TODO: Check if plugin already loaded
   const puid_t puid = pinfo->puid();
-  plugins_.emplace(puid, pinfo);
-  bind_translator_to_port(4444, puid);
 
   BOOST_LOG_SEV(log_, logging::notify)
     << "Plugin loaded uid: " << puid
     << " name: " << pinfo->name()
     << " version: " << pinfo->version()
     << " path: " << path_name.string();
+
+  switch (pinfo->ptype()) {
+  case plugin_api::PLUGIN_TRANSLATOR:
+    translator_manager_.add(pinfo);
+    break;
+
+  case plugin_api::PLUGIN_DISPATCHER:
+    //dm_.add(pinfo);
+    break;
+
+  default:
+    BOOST_LOG_SEV(log_, logging::warning)
+      << "Unknown plugin type: " << puid << ". Unloading it.";
+    return;
+  }
+
+  plugins_.emplace(puid, pinfo);
 }
 
 void
@@ -61,43 +81,6 @@ plugin_factory::create(puid_t uid)
 
   std::out_of_range e("threre is no loaded plugin with such uid");
   boost::throw_exception(e);
-}
-
-bool
-plugin_factory::bind_translator_to_port(unsigned short port_num, const puid_t uid)
-{
-  BOOST_AUTO(it, plugins_.find(uid));
-
-  if (it == plugins_.end()) {
-    BOOST_LOG_SEV(log_, logging::warning)
-      << "Tried to link port: " << port_num
-      << " with not loaded plugin (uid: " << uid << ")";
-
-    return false;
-  }
-  else if (it->second->ptype() != plugin_api::PLUGIN_TRANSLATOR) {
-    BOOST_LOG_SEV(log_, logging::warning)
-      << "Tried to link port: " << port_num
-      << " with plugin (uid: " << uid << ") which is not a translator";
-
-    return false;
-  }
-
-  BOOST_LOG_SEV(log_, logging::info)
-    << "port: " << port_num << " has been linked with plugin \""
-    << it->second->name() << "\" (uid: " << uid << ")";
-
-  plugin_ports_.emplace(port_num, uid);
-
-  return true;
-}
-
-boost::iterator_range<plugin_factory::plugin_ports_t::const_iterator>
-plugin_factory::tanslators_on_port(const unsigned short port_num)
-{
-  /// TODO: Can we use boost::move?
-  return boost::make_iterator_range(plugin_ports_.lower_bound(port_num),
-                                    plugin_ports_.upper_bound(port_num));
 }
 
 } // namespace eiptnd

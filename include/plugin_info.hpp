@@ -13,6 +13,7 @@
 namespace eiptnd {
 
 typedef boost::shared_ptr<boost::plugin::shared_library> plugin_library_ptr;
+typedef std::string puid_t;
 
 class plugin_info
   : private boost::noncopyable
@@ -48,8 +49,9 @@ public:
       return creator_();
   }
 
+  const boost::plugin::shared_library& library() const { return library_; }
   plugin_api::plugin_type ptype() const { return ptype_; }
-  std::string puid() const { return puid_; }
+  puid_t puid() const { return puid_; }
   std::string name() const { return name_; }
   std::string version() const { return version_; }
 
@@ -66,7 +68,7 @@ private:
 
   /// Public plugin information.
   plugin_api::plugin_type ptype_;
-  std::string puid_;
+  puid_t puid_;
   std::string name_;
   std::string version_;
 };

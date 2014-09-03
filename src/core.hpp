@@ -5,6 +5,7 @@
 #include "plugin_factory.hpp"
 #include "request_router.hpp"
 
+#include <vector>
 #include <boost/application/context.hpp>
 #include <boost/asio/io_service.hpp>
 #include <boost/program_options/variables_map.hpp>
@@ -13,10 +14,14 @@ typedef std::vector<std::string> string_vector;
 
 namespace eiptnd {
 
+class plugin_factory;
+class translator_manager;
+class request_router;
+
 class core
 {
 public:
-  core(boost::application::context& context, boost::program_options::variables_map& vm);
+  explicit core(boost::application::context& context, boost::program_options::variables_map& vm);
 
   /// Handles run signal.
   int operator()();

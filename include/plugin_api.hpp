@@ -68,6 +68,8 @@ typedef boost::shared_ptr<plugin_api::interface> plugin_interface_ptr;
 typedef boost::function<plugin_interface_ptr()> plugin_interface_ptr_fn;
 typedef BOOST_TYPEOF(&plugin_api::create_shared) create_shared_fn;
 
+typedef boost::shared_ptr<plugin_api::translator> plugin_translator_ptr;
+
 } // namespace eiptnd
 
 #define DECLARE_PLUGIN(T)                         \
