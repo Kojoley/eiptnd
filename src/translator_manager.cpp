@@ -41,7 +41,6 @@ bool
 translator_manager::map_port(unsigned short port_num, const puid_t uid)
 {
   BOOST_AUTO(it, loaded_translators_.find(uid));
-
   if (it == loaded_translators_.end()) {
     BOOST_LOG_SEV(log_, logging::warning)
       << "Tried to map port=" << port_num << " with not loaded plugin"
@@ -53,6 +52,14 @@ translator_manager::map_port(unsigned short port_num, const puid_t uid)
     BOOST_LOG_SEV(log_, logging::warning)
       << "Tried to map port=" << port_num  << " with plugin"
          " (uid='" << uid << "') which is not a translator";
+
+    return false;
+  }
+
+  BOOST_AUTO(itpm, port_mapping_.find(port_num));
+  if (itpm != port_mapping_.end() && itpm->second == uid) {
+    BOOST_LOG_SEV(log_, logging::warning)
+      << "Already mapped port=" << port_num << " to uid='" << uid << "'";
 
     return false;
   }
