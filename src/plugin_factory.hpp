@@ -15,6 +15,7 @@ namespace eiptnd {
 class translator_manager;
 
 class plugin_factory
+  : private boost::noncopyable
 {
 public:
   plugin_factory();

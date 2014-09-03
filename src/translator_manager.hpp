@@ -13,6 +13,7 @@ namespace eiptnd {
 class plugin_factory;
 
 class translator_manager
+  : private boost::noncopyable
 {
 public:
   typedef boost::container::flat_multimap<unsigned short, puid_t> port_mapping_t;

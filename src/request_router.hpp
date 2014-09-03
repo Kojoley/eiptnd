@@ -12,6 +12,7 @@
 namespace eiptnd {
 
 class request_router
+  : private boost::noncopyable
 {
 public:
   request_router();
