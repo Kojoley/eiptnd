@@ -9,6 +9,7 @@
 #include <boost/application/context.hpp>
 #include <boost/asio/io_service.hpp>
 #include <boost/program_options/variables_map.hpp>
+#include <boost/property_tree/ptree_fwd.hpp>
 
 typedef std::vector<std::string> string_vector;
 
@@ -34,6 +35,12 @@ public:
   request_router& get_rr() { return request_router_; }
 
 private:
+  /// Heart of service.
+  void run();
+
+  /// Load settings from configuration file.
+  void load_settings();
+
   /// Logger instance and attributes.
   logging::logger log_;
 
@@ -54,6 +61,9 @@ private:
 
   ///
   request_router request_router_;
+
+  /// Settings tree.
+  boost::property_tree::ptree settings_;
 };
 
 } // namespace eiptnd

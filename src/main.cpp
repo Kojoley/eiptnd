@@ -15,8 +15,6 @@ int main(int argc, char* argv[])
   namespace app = boost::application;
   namespace po = boost::program_options;
 
-  std::cout << DAEMON_INFO "\n" << std::endl;
-
   po::variables_map vm;
 
   po::options_description general("General options");
@@ -24,9 +22,14 @@ int main(int argc, char* argv[])
     ("help,h", "show this help message")
     ("version,v", "output the version information and exit")
     ("foreground,F", "run in foreground mode")
+#if not defined(BOOST_OS_WINDOWS)
     ("pid-file", po::value<std::string>()
                    ->default_value(DEFAULT_PID_PATH)
                    ->value_name("path"), "pid file location")
+#endif
+    ("config-file", po::value<std::string>()
+                   ->default_value(DEFAULT_CONFIG_PATH)
+                   ->value_name("path"), "config file location")
   ;
 
   std::size_t num_threads = std::max(1u, boost::thread::hardware_concurrency());
@@ -71,8 +74,12 @@ int main(int argc, char* argv[])
   }
 
   if (vm.count("version")) {
+    std::cout << DAEMON_VERSION << std::endl;
+
     return EXIT_SUCCESS;
   }
+
+  std::cout << DAEMON_INFO "\n" << std::endl;
 
   if (vm.count("help")) {
     std::cout << desc << std::endl;

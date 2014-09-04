@@ -7,6 +7,7 @@
 #include <boost/foreach.hpp>
 #include <boost/container/vector.hpp>
 #include <boost/container/list.hpp>
+#include <boost/container/flat_set.hpp>
 #include <boost/core/null_deleter.hpp>
 #include <boost/log/attributes.hpp>
 #include <boost/log/expressions.hpp>
@@ -17,6 +18,7 @@
 #include <boost/log/sinks/text_ostream_backend.hpp>
 #include <boost/log/sinks/unbounded_ordering_queue.hpp>
 #include <boost/make_shared.hpp>
+#include <boost/property_tree/json_parser.hpp>
 
 namespace eiptnd {
 
@@ -30,7 +32,7 @@ typedef boost::log::sinks::asynchronous_sink<
   >
 > sink_t;
 
-boost::shared_ptr<sink_t>
+void
 init_logging()
 {
   namespace attrs = boost::log::attributes;
@@ -51,7 +53,7 @@ init_logging()
     backend,
     boost::log::keywords::order =
       boost::log::make_attr_ordering("RecordID", std::less<std::size_t>()),
-    boost::log::keywords::ordering_window = boost::posix_time::seconds(1)
+    boost::log::keywords::ordering_window = boost::posix_time::milliseconds(250)
   );
   core->add_sink(sink_);
   core->add_global_attribute("TimeStamp", attrs::local_clock());
@@ -65,8 +67,6 @@ init_logging()
       % expr::attr<std::string>("Channel")
       % expr::smessage
   );
-
-  return sink_;
 }
 
 namespace app = boost::application;
@@ -85,20 +85,58 @@ core::core(app::context& context, boost::program_options::variables_map& vm)
 int
 core::operator()()
 {
-  boost::shared_ptr<app::path> pt = context_.find<app::path>();
-  boost::shared_ptr<sink_t> sink_ = init_logging();
+  int ret = EXIT_SUCCESS;
+  try {
+    init_logging();
+    load_settings();
 
-  plugin_factory_.load_dir(pt->executable_path());
+    boost::shared_ptr<app::path> pt = context_.find<app::path>();
+    plugin_factory_.load_dir(pt->executable_path());
 
-  /// TODO: Replace with intrusive list
+    run();
+  }
+  catch (const boost::exception& e) {
+    BOOST_LOG_SEV(log_, logging::global)
+      << "Shutting down after an unrecoverable error";
+    ret = EXIT_FAILURE;
+  }
+
+  BOOST_AUTO(logging_core, boost::log::core::get());
+  logging_core->flush();
+  logging_core->remove_all_sinks();
+
+  return ret;
+}
+
+bool
+core::stop()
+{
+  BOOST_LOG_SEV(log_, logging::notify) << "Caught signal to stop";
+  io_service_.stop();
+  return true; // return true to stop, false to ignore
+}
+
+void
+core::run()
+{
+  using boost::property_tree::ptree;
+
+  boost::container::flat_set<unsigned short> tcp_ports;
+
+  translator_manager& tm = plugin_factory_.get_tm();
+  BOOST_FOREACH(ptree::value_type &plugin, settings_.get_child("plugin.translator")) {
+    BOOST_FOREACH(ptree::value_type &arr, plugin.second.get_child("tcp")) {
+      BOOST_ASSERT(arr.first.empty());
+      BOOST_AUTO(port_num, arr.second.get<unsigned short>(""));
+      tm.map_port(port_num, plugin.first);
+      tcp_ports.insert_unique(port_num);
+    }
+  }
+
   typedef boost::shared_ptr<tcp_server> server_ptr;
   boost::container::list<server_ptr> servers;
 
   string_vector bind_list = vm_["bind"].as<string_vector>();
-
-  std::vector<unsigned short> tcp_ports;
-  tcp_ports.push_back(3333);
-  tcp_ports.push_back(4444);
 
   try {
     BOOST_FOREACH(const std::string& address, bind_list) {
@@ -109,13 +147,13 @@ core::operator()()
             boost::make_shared<tcp_server>(
                 boost::ref(*this), address, port_num));
       }
-      //BOOST_FOREACH(std::string port, udp_ports) {
-      //}
     }
   }
   catch (const boost::system::system_error& e) {
     BOOST_LOG_SEV(log_, logging::critical)
       << e.what() << " (" << e.code().value() << ")";
+
+    throw;
   }
 
   boost::thread_group threads;
@@ -126,18 +164,23 @@ core::operator()()
   threads.join_all();
 
   BOOST_LOG_SEV(log_, logging::notify) << "All threads are done";
-
-  sink_->flush();
-
-  return EXIT_SUCCESS;
 }
 
-bool
-core::stop()
+void
+core::load_settings()
 {
-  BOOST_LOG_SEV(log_, logging::notify) << "Caught signal to stop";
-  io_service_.stop();
-  return true; // return true to stop, false to ignore
+  using boost::property_tree::ptree;
+  namespace json_parser = boost::property_tree::json_parser;
+
+  try {
+    const std::string filename = vm_["config-file"].as<std::string>();
+    json_parser::read_json(filename, settings_);
+  }
+  catch (const json_parser::json_parser_error& e) {
+    BOOST_LOG_SEV(log_, logging::critical) << e.what();
+
+    throw;
+  }
 }
 
 } // namespace eiptnd

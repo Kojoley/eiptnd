@@ -1,0 +1,19 @@
+{
+
+  "plugin" : {
+
+    "translator" : {
+
+      "echo-example" : {
+        "tcp" : [ 3333 ]
+      },
+
+      "wialon" : {
+        "tcp" : [ 4444 ]
+      }
+
+    }
+
+  }
+
+}
