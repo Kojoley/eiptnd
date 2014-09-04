@@ -11,7 +11,7 @@ namespace eiptnd {
 namespace logging {
 
 enum severity_level {
-  silence  = 0x000,
+  global  = 0x000,
   critical = 0x200,
   error    = 0x400,
   warning  = 0x600,
@@ -27,10 +27,10 @@ inline std::basic_ostream<CharT, TraitsT>& operator<< (
   std::basic_ostream<CharT, TraitsT>& os, const severity_level level)
 {
   static const char* strings[] = {
-    "",
-    "CRIT",
+    "GLOBAL",
+    "CRITICAL",
     "ERROR",
-    "WARN",
+    "WARNING",
     "NOTIFY",
     "NORMAL",
     "INFO",
@@ -47,7 +47,7 @@ inline std::basic_ostream<CharT, TraitsT>& operator<< (
   return os;
 }
 
-//typedef boost::log::sources::severity_channel_logger_mt<severity_level> logger;
+typedef boost::log::sources::severity_channel_logger_mt<severity_level> logger_mt;
 typedef boost::log::sources::severity_channel_logger<severity_level> logger;
 
 } // namespace logging

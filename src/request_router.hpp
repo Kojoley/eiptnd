@@ -23,7 +23,7 @@ public:
 
 private:
   /// Logger instance and attributes.
-  logging::logger log_;
+  logging::logger_mt log_;
 };
 
 } // namespace eiptnd
