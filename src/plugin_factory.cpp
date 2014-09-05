@@ -16,7 +16,6 @@ plugin_factory::load(const boost::filesystem::path& path_name)
 {
   /// TODO: catch boost::system::system_error
   BOOST_AUTO(pinfo, boost::make_shared<plugin_info>(path_name));
-  /// TODO: Check if plugin already loaded
   const puid_t puid = pinfo->puid();
 
   BOOST_LOG_SEV(log_, logging::notify)
@@ -24,6 +23,13 @@ plugin_factory::load(const boost::filesystem::path& path_name)
     << " name: " << pinfo->name()
     << " version: " << pinfo->version()
     << " path: " << path_name.string();
+
+  BOOST_AUTO(it, plugins_.find(puid));
+  if (it != plugins_.end()) {
+    BOOST_LOG_SEV(log_, logging::error)
+      << "Plugin with same uid='" << puid << "' is already loaded"
+         " from " << it->second->library().path();
+  }
 
   switch (pinfo->ptype()) {
   case plugin_api::PLUGIN_TRANSLATOR:
