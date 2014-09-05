@@ -48,7 +48,7 @@ translator_manager::map_port(unsigned short port_num, const puid_t uid)
 
     return false;
   }
-  else if (it->second->ptype() != plugin_api::PLUGIN_TRANSLATOR) {
+  else if (it->second->type() != plugin_api::PLUGIN_TRANSLATOR) {
     BOOST_LOG_SEV(log_, logging::warning)
       << "Tried to map port=" << port_num  << " with plugin"
          " (uid='" << uid << "') which is not a translator";

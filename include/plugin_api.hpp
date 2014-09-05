@@ -27,7 +27,6 @@ typedef boost::signals2::signal<void(bool)>::slot_type process_data_callback;
 
 struct api
 {
-  //typedef boost::variant</*MatchCondition,*/ char, const std::string/*, const boost::regex*/> read_condition_t;
   boost::function<void(boost::asio::streambuf&, const std::string& delim)> do_read_until;
   boost::function<void(const boost::asio::mutable_buffer&)> do_read_some;
   boost::function<void(const boost::asio::const_buffer&)> do_write;
@@ -39,9 +38,8 @@ struct api
 class interface
 {
 public:
-  /*interface(boost::shared_ptr<plugin_api::api> papi) : api_(papi) {};*/
   virtual ~interface() {}
-  virtual plugin_type ptype() = 0;
+  virtual plugin_type type() = 0;
   virtual const char* uid() = 0;
   virtual const char* name() = 0;
   virtual const char* version() = 0;
@@ -51,7 +49,7 @@ class translator
   : public interface
 {
 public:
-  virtual plugin_type ptype() { return PLUGIN_TRANSLATOR; }
+  virtual plugin_type type() { return PLUGIN_TRANSLATOR; }
   virtual void handle_start() = 0;
   virtual void handle_read(std::size_t bytes_transferred) = 0;
   virtual void handle_write() = 0;
@@ -77,7 +75,6 @@ typedef boost::shared_ptr<plugin_api::translator> plugin_translator_ptr;
   create_shared(void)                             \
   { return boost::make_shared<T>(); }             \
   BOOST_PLUGIN_ALIAS(create_shared, create_plugin)
-/// TODO: Prevent double usage
 // DECLARE_PLUGIN
 
 #endif // PLUGIN_API_H

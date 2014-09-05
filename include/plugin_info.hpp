@@ -24,7 +24,7 @@ public:
     , creator_(library_.get<create_shared_fn>("create_plugin"))
   {
     BOOST_AUTO(instance, creator_());
-    ptype_ = instance->ptype();
+    type_ = instance->type();
     puid_ = instance->uid();
     name_ = instance->name();
     version_ = instance->version();
@@ -50,7 +50,7 @@ public:
   }
 
   const boost::plugin::shared_library& library() const { return library_; }
-  plugin_api::plugin_type ptype() const { return ptype_; }
+  plugin_api::plugin_type type() const { return type_; }
   puid_t puid() const { return puid_; }
   std::string name() const { return name_; }
   std::string version() const { return version_; }
@@ -67,7 +67,7 @@ private:
   //create_shared_fn creator_;
 
   /// Public plugin information.
-  plugin_api::plugin_type ptype_;
+  plugin_api::plugin_type type_;
   puid_t puid_;
   std::string name_;
   std::string version_;

@@ -31,7 +31,7 @@ plugin_factory::load(const boost::filesystem::path& path_name)
          " from " << it->second->library().path();
   }
 
-  switch (pinfo->ptype()) {
+  switch (pinfo->type()) {
   case plugin_api::PLUGIN_TRANSLATOR:
     translator_manager_.add(pinfo);
     break;
