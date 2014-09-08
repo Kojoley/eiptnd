@@ -8,7 +8,7 @@ call::GetAbsolutePath "BOOST_ROOT" "%BOOST_ROOT%"
 echo %BOOST_ROOT%
 
 call:InstallGitToBoost "https://github.com/retf/Boost.Application.git" "boost.application"
-call:InstallGitToBoost "https://github.com/apolukhin/Boost.Plugin.git" "boost.plugin"
+call:InstallGitToBoost "https://github.com/apolukhin/Boost.DLL.git" "boost.dll"
 
 cd %BOOST_ROOT%
 @echo on
