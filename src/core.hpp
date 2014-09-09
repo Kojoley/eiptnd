@@ -3,7 +3,6 @@
 
 #include "log.hpp"
 #include "plugin_factory.hpp"
-#include "request_router.hpp"
 
 #include <vector>
 #include <boost/application/context.hpp>
@@ -17,7 +16,6 @@ namespace eiptnd {
 
 class plugin_factory;
 class translator_manager;
-class request_router;
 
 class core
 {
@@ -32,7 +30,6 @@ public:
 
   boost::asio::io_service& get_ios() { return io_service_; }
   plugin_factory& get_pf() { return plugin_factory_; }
-  request_router& get_rr() { return request_router_; }
 
 private:
   /// Heart of service.
@@ -58,9 +55,6 @@ private:
 
   ///
   plugin_factory plugin_factory_;
-
-  ///
-  request_router request_router_;
 
   /// Settings tree.
   boost::property_tree::ptree settings_;

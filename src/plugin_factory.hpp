@@ -4,6 +4,7 @@
 #include "plugin_api.hpp"
 #include "plugin_info.hpp"
 #include "translator_manager.hpp"
+#include "request_router.hpp"
 #include "log.hpp"
 
 #include <boost/application.hpp>
@@ -30,6 +31,7 @@ public:
   plugin_interface_ptr create(puid_t puid);
 
   translator_manager& get_tm() { return translator_manager_; }
+  request_router& get_rr() { return request_router_; }
 
 private:
   /// Logger instance and channels.
@@ -37,6 +39,9 @@ private:
 
   ///
   translator_manager translator_manager_;
+
+  ///
+  request_router request_router_;
 
   ///
   boost::container::flat_map<puid_t, plugin_info_ptr> plugins_;
