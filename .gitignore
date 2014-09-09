@@ -30,3 +30,13 @@ install_manifest.txt
 
 ### Qt Creator ###
 CMakeLists.txt.user*
+
+### CLion ###
+# Directory-based project:
+.idea/
+
+# File-based project:
+*.iml
+*.iws
+
+*.autosave
