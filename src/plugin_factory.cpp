@@ -29,6 +29,7 @@ plugin_factory::load(const boost::filesystem::path& path_name)
     BOOST_LOG_SEV(log_, logging::error)
       << "Plugin with same uid='" << puid << "' is already loaded"
          " from " << it->second->library().path();
+    return;
   }
 
   switch (pinfo->type()) {
@@ -88,5 +89,24 @@ plugin_factory::create(puid_t uid)
   std::out_of_range e("threre is no loaded plugin with such uid");
   boost::throw_exception(e);
 }
+
+void
+plugin_factory::load_settings(const boost::property_tree::ptree& settings)
+{
+  using boost::property_tree::ptree;
+
+  BOOST_AUTO(path, settings.get_child_optional("path"));
+  if (path) {
+    BOOST_FOREACH(const ptree::value_type &v, *path) {
+      load_dir(boost::filesystem::current_path() / v.second.get<std::string>(""));
+    }
+  }
+  else {
+    load_dir(boost::filesystem::current_path());
+  }
+
+  translator_manager_.load_settings(settings.get_child("translator"));
+}
+
 
 } // namespace eiptnd

@@ -27,7 +27,11 @@ public:
 
   bool map_port(unsigned short port_num, const puid_t uid);
 
+  iterator_range list_port();
+
   iterator_range list_port(const unsigned short port_num);
+
+  void load_settings(const boost::property_tree::ptree& settings);
 
 private:
   /// Logger instance and attributes.

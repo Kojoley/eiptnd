@@ -1,6 +1,6 @@
 #include "translator_manager.hpp"
 
-#include "plugin_factory.hpp"
+#include <boost/foreach.hpp>
 
 namespace eiptnd {
 
@@ -74,11 +74,29 @@ translator_manager::map_port(unsigned short port_num, const puid_t uid)
 }
 
 translator_manager::iterator_range
+translator_manager::list_port()
+{
+  return boost::make_iterator_range(port_mapping_.begin(), port_mapping_.end());
+}
+
+translator_manager::iterator_range
 translator_manager::list_port(const unsigned short port_num)
 {
-  /// TODO: Can we use boost::move?
   return boost::make_iterator_range(port_mapping_.lower_bound(port_num),
                                     port_mapping_.upper_bound(port_num));
+}
+
+void
+translator_manager::load_settings(const boost::property_tree::ptree& settings)
+{
+  using boost::property_tree::ptree;
+
+  BOOST_FOREACH(const ptree::value_type &plugin, settings) {
+    BOOST_FOREACH(const ptree::value_type &arr, plugin.second.get_child("tcp")) {
+      BOOST_ASSERT(arr.first.empty());
+      map_port(arr.second.get<unsigned short>(""), plugin.first);
+    }
+  }
 }
 
 } // namespace eiptnd

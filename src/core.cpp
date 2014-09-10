@@ -19,6 +19,7 @@
 #include <boost/log/sinks/unbounded_ordering_queue.hpp>
 #include <boost/make_shared.hpp>
 #include <boost/property_tree/json_parser.hpp>
+#include <boost/range/adaptor/map.hpp>
 
 namespace eiptnd {
 
@@ -88,10 +89,6 @@ core::operator()()
   try {
     init_logging();
     load_settings();
-
-    boost::shared_ptr<app::path> pt = context_.find<app::path>();
-    plugin_factory_.load_dir(pt->executable_path());
-
     run();
   }
   catch (const boost::exception& e) {
@@ -118,19 +115,9 @@ core::stop()
 void
 core::run()
 {
-  using boost::property_tree::ptree;
-
-  boost::container::flat_set<unsigned short> tcp_ports;
-
   translator_manager& tm = plugin_factory_.get_tm();
-  BOOST_FOREACH(ptree::value_type &plugin, settings_.get_child("plugin.translator")) {
-    BOOST_FOREACH(ptree::value_type &arr, plugin.second.get_child("tcp")) {
-      BOOST_ASSERT(arr.first.empty());
-      BOOST_AUTO(port_num, arr.second.get<unsigned short>(""));
-      tm.map_port(port_num, plugin.first);
-      tcp_ports.insert_unique(port_num);
-    }
-  }
+  BOOST_AUTO(it, tm.list_port() | boost::adaptors::map_keys);
+  boost::container::flat_set<unsigned short> tcp_ports(it.begin(), it.end());
 
   typedef boost::shared_ptr<tcp_server> server_ptr;
   boost::container::list<server_ptr> servers;
@@ -171,8 +158,11 @@ core::load_settings()
   using boost::property_tree::ptree;
   namespace json_parser = boost::property_tree::json_parser;
 
+  const std::string filename = vm_["config-file"].as<std::string>();
+  BOOST_LOG_SEV(log_, logging::info)
+    << "Loading settings from configuration file " << filename;
+
   try {
-    const std::string filename = vm_["config-file"].as<std::string>();
     json_parser::read_json(filename, settings_);
   }
   catch (const json_parser::json_parser_error& e) {
@@ -180,6 +170,8 @@ core::load_settings()
 
     throw;
   }
+
+  plugin_factory_.load_settings(settings_.get_child("plugin"));
 }
 
 } // namespace eiptnd

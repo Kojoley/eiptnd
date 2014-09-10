@@ -30,6 +30,8 @@ public:
   /// Create plugin instance.
   plugin_interface_ptr create(puid_t puid);
 
+  void load_settings(const boost::property_tree::ptree& settings);
+
   translator_manager& get_tm() { return translator_manager_; }
   request_router& get_rr() { return request_router_; }
 
