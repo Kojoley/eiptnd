@@ -1,5 +1,7 @@
 #include "translator_manager.hpp"
 
+#include "empty_ptree.hpp"
+
 #include <boost/foreach.hpp>
 
 namespace eiptnd {
@@ -92,7 +94,7 @@ translator_manager::load_settings(const boost::property_tree::ptree& settings)
   using boost::property_tree::ptree;
 
   BOOST_FOREACH(const ptree::value_type &plugin, settings) {
-    BOOST_FOREACH(const ptree::value_type &arr, plugin.second.get_child("tcp")) {
+    BOOST_FOREACH(const ptree::value_type &arr, plugin.second.get_child("tcp", empty_ptree<ptree>())) {
       BOOST_ASSERT(arr.first.empty());
       map_port(arr.second.get<unsigned short>(""), plugin.first);
     }

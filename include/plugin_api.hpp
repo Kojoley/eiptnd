@@ -53,9 +53,17 @@ public:
   virtual void handle_start() = 0;
   virtual void handle_read(std::size_t bytes_transferred) = 0;
   virtual void handle_write() = 0;
-  void setup_api(boost::shared_ptr<plugin_api::api> p) { api_ = p; }
+  void setup_api(boost::shared_ptr<api> p) { api_ = p; }
 protected:
-  boost::shared_ptr<plugin_api::api> api_;
+  boost::shared_ptr<api> api_;
+};
+
+class dispatcher
+  : public interface
+{
+public:
+  virtual plugin_type type() { return PLUGIN_DISPATCHER; }
+  virtual void handle_process_data(boost::shared_ptr<boost::property_tree::ptree> tree, process_data_callback callback) = 0;
 };
 
 boost::shared_ptr<interface> create_shared();

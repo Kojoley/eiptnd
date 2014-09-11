@@ -1,6 +1,7 @@
 #include "core.hpp"
 
 #include "tcp_server.hpp"
+#include "empty_ptree.hpp"
 #include "log.hpp"
 
 #include <boost/bind.hpp>
@@ -95,6 +96,7 @@ core::operator()()
     BOOST_LOG_SEV(log_, logging::global)
       << "Shutting down after an unrecoverable error";
     ret = EXIT_FAILURE;
+    throw;
   }
 
   BOOST_AUTO(logging_core, boost::log::core::get());
@@ -171,7 +173,7 @@ core::load_settings()
     throw;
   }
 
-  plugin_factory_.load_settings(settings_.get_child("plugin"));
+  plugin_factory_.load_settings(settings_.get_child("plugin", empty_ptree<ptree>()));
 }
 
 } // namespace eiptnd

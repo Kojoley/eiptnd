@@ -37,7 +37,7 @@ private:
   /// Logger instance and attributes.
   logging::logger log_;
 
-  boost::container::flat_multimap<puid_t, plugin_info_ptr> loaded_translators_;
+  boost::container::flat_map<puid_t, plugin_info_ptr> loaded_translators_;
   port_mapping_t port_mapping_;
 
 };

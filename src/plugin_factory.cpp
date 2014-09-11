@@ -1,5 +1,7 @@
 #include "plugin_factory.hpp"
 
+#include "empty_ptree.hpp"
+
 #include <boost/foreach.hpp>
 #include <boost/log/utility/manipulators/add_value.hpp>
 #include <boost/throw_exception.hpp>
@@ -38,7 +40,7 @@ plugin_factory::load(const boost::filesystem::path& path_name)
     break;
 
   case plugin_api::PLUGIN_DISPATCHER:
-    //dm_.add(pinfo);
+    request_router_.add(pinfo);
     break;
 
   default:
@@ -105,8 +107,8 @@ plugin_factory::load_settings(const boost::property_tree::ptree& settings)
     load_dir(boost::filesystem::current_path());
   }
 
-  translator_manager_.load_settings(settings.get_child("translator"));
+  translator_manager_.load_settings(settings.get_child("translator", empty_ptree<ptree>()));
+  request_router_.load_settings(settings.get_child("dispatcher", empty_ptree<ptree>()));
 }
-
 
 } // namespace eiptnd
