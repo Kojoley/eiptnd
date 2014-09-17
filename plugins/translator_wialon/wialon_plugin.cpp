@@ -85,7 +85,7 @@ wialon_plugin::fields_t wialon_plugin::fields_ = boost::assign::list_of<fields_s
 #pragma pop_macro("_")
 
 wialon_plugin::wialon_plugin()
-  : log_(boost::log::keywords::channel = "plugin2")
+  : log_(boost::log::keywords::channel = uid())
   , authenticate_callback_(boost::bind(&wialon_plugin::handle_authenticate, this, _1))
   , process_data_callback_(boost::bind(&wialon_plugin::handle_process_data, this, _1))
 {

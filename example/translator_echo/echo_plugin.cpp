@@ -5,7 +5,7 @@
 namespace eiptnd {
 
 echo_plugin::echo_plugin()
-  : log_(boost::log::keywords::channel = "plugin1")
+  : log_(boost::log::keywords::channel = uid())
 {
   BOOST_LOG_SEV(log_, logging::trace) << name() << " created";
 }

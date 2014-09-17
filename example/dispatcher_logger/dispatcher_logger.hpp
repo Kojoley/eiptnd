@@ -14,9 +14,9 @@ public:
 
   ~dispatcher_logger();
 
-  const char* uid() { return "dispatcher-logger"; }
+  const char* uid() { return "logger-example"; }
 
-  const char* name() { return "Dispatcher Logger Example"; }
+  const char* name() { return "Logger Example"; }
 
   const char* version() { return "0.1"; }
 
