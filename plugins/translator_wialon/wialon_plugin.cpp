@@ -136,7 +136,7 @@ void wialon_plugin::handle_read(std::size_t bytes_transferred)
 
   BOOST_LOG_SEV(log_, logging::trace)
     << "[Parser::Input] size: " << msg.size()
-    << "data: " << create_escapes(msg);
+    << " data: " << create_escapes(msg);
 
   parse_string(msg);
   consume_token("\r\n"); /// NOTE: Hack for consumed LF
@@ -177,10 +177,10 @@ void wialon_plugin::consume_token(const std::string& tok)
         commit_command();
         break;
       }
-      /// Fall through
+      BOOST_FALLTHROUGH;
     case STATE_BAR:
       store_data();
-      /// Fall through
+      BOOST_FALLTHROUGH;
     case STATE_SKIP_TO_BAR_OR_END:
       commit_command();
       break;
@@ -215,7 +215,7 @@ void wialon_plugin::consume_token(const std::string& tok)
     is_parser_error_ = false;
     multicommand_ = 0;
     cmd_ = "<not initialized>";
-    /// Fall through
+    BOOST_FALLTHROUGH;
   case STATE_IMEI:
     /// TODO: Can imei be changed during session?
     /*if (udp == protocol && !authenticated_) {
@@ -272,10 +272,6 @@ void wialon_plugin::consume_token(const std::string& tok)
       state_ = ( (current_cmd_ != COMMAND_BLACKBOX) ? STATE_END : STATE_BAR );
       BOOST_LOG_SEV(log_, logging::trace)
         << "[Parser::State] STATE_BODY changed to " << state_;
-    }
-    else {
-      BOOST_LOG_SEV(log_, logging::trace)
-        << "[Parser::State] STATE_BODY unchanged";
     }
     break;
 

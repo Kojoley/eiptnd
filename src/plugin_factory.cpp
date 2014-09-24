@@ -1,5 +1,6 @@
 #include "plugin_factory.hpp"
 
+#include "core.hpp"
 #include "empty_ptree.hpp"
 
 #include <boost/foreach.hpp>
@@ -8,8 +9,10 @@
 
 namespace eiptnd {
 
-plugin_factory::plugin_factory()
+plugin_factory::plugin_factory(core& core)
   : log_(boost::log::keywords::channel = "plugin-factory")
+  , core_(core)
+  , request_router_(core_)
 {
 }
 

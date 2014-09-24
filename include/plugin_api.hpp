@@ -13,27 +13,17 @@
 #include <boost/signals2/signal.hpp>
 #include <boost/typeof/typeof.hpp>
 
-namespace eiptnd {
+namespace boost { namespace asio { class io_service; } }
 
+namespace eiptnd {
 namespace plugin_api {
+
 
 typedef enum {
   PLUGIN_TRANSLATOR,
   PLUGIN_DISPATCHER
 } plugin_type;
 
-typedef boost::signals2::signal<void(bool)>::slot_type authenticate_callback;
-typedef boost::signals2::signal<void(bool)>::slot_type process_data_callback;
-
-struct api
-{
-  boost::function<void(boost::asio::streambuf&, const std::string& delim)> do_read_until;
-  boost::function<void(const boost::asio::mutable_buffer&)> do_read_some;
-  boost::function<void(const boost::asio::const_buffer&)> do_write;
-
-  boost::function<void(std::string, std::string, authenticate_callback)> authenticate;
-  boost::function<void(boost::shared_ptr<boost::property_tree::ptree>, process_data_callback)> process_data;
-};
 
 class interface
 {
@@ -43,6 +33,21 @@ public:
   virtual const char* uid() = 0;
   virtual const char* name() = 0;
   virtual const char* version() = 0;
+  virtual void load_settings(const boost::property_tree::ptree&) {}
+};
+
+
+typedef boost::signals2::signal<void(bool)>::slot_type authenticate_callback;
+typedef boost::signals2::signal<void(bool)>::slot_type process_data_callback;
+
+struct api_translator
+{
+  boost::function<void(boost::asio::streambuf&, const std::string& delim)> do_read_until;
+  boost::function<void(const boost::asio::mutable_buffer&)> do_read_some;
+  boost::function<void(const boost::asio::const_buffer&)> do_write;
+
+  boost::function<void(std::string, std::string, authenticate_callback)> authenticate;
+  boost::function<void(boost::shared_ptr<boost::property_tree::ptree>, process_data_callback)> process_data;
 };
 
 class translator
@@ -53,9 +58,14 @@ public:
   virtual void handle_start() = 0;
   virtual void handle_read(std::size_t bytes_transferred) = 0;
   virtual void handle_write() = 0;
-  void setup_api(boost::shared_ptr<api> p) { api_ = p; }
+  void setup_api(boost::shared_ptr<api_translator> p) { api_ = p; }
 protected:
-  boost::shared_ptr<api> api_;
+  boost::shared_ptr<api_translator> api_;
+};
+
+struct api_dispatcher
+{
+  boost::function<boost::asio::io_service&()> io_service;
 };
 
 class dispatcher
@@ -64,6 +74,9 @@ class dispatcher
 public:
   virtual plugin_type type() { return PLUGIN_DISPATCHER; }
   virtual void handle_process_data(boost::shared_ptr<boost::property_tree::ptree> tree, process_data_callback callback) = 0;
+  void setup_api(boost::shared_ptr<api_dispatcher> p) { api_ = p; }
+protected:
+  boost::shared_ptr<api_dispatcher> api_;
 };
 
 boost::shared_ptr<interface> create_shared();
@@ -75,6 +88,7 @@ typedef boost::function<plugin_interface_ptr()> plugin_interface_ptr_fn;
 typedef BOOST_TYPEOF(&plugin_api::create_shared) create_shared_fn;
 
 typedef boost::shared_ptr<plugin_api::translator> plugin_translator_ptr;
+typedef boost::shared_ptr<plugin_api::dispatcher> plugin_dispatcher_ptr;
 
 } // namespace eiptnd
 

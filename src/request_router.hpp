@@ -14,13 +14,17 @@
 
 namespace eiptnd {
 
+class core;
+
 class request_router
   : private boost::noncopyable
 {
 public:
-  request_router();
+  request_router(core& core);
 
   void add(plugin_info_ptr info);
+
+  plugin_dispatcher_ptr create(puid_t uid);
 
   void authenticate(const boost::asio::ip::address& address, std::string id, std::string password, plugin_api::authenticate_callback callback);
 
@@ -31,6 +35,9 @@ public:
 private:
   /// Logger instance and attributes.
   logging::logger_mt log_;
+
+  ///
+  core& core_;
 
   boost::container::flat_map<puid_t, plugin_info_ptr> loaded_dispatchers_;
   boost::container::vector<boost::shared_ptr<plugin_api::dispatcher> > dispatchers_;

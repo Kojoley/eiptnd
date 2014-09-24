@@ -79,7 +79,7 @@ core::core(app::context& context, boost::program_options::variables_map& vm)
   , vm_(vm)
   , thread_pool_size_(vm_["num-threads"].as<std::size_t>())
   , io_service_(thread_pool_size_)
-  , plugin_factory_()
+  , plugin_factory_(*this)
 {
 }
 

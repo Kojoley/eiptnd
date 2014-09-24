@@ -14,7 +14,6 @@
 namespace eiptnd {
 
 class core;
-
 class plugin_factory;
 
 /// Represents a single connection from a client.

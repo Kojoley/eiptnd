@@ -45,7 +45,7 @@ connection::on_connection()
   BOOST_LOG_SEV(log_, logging::info) << "Connection accepted";
 
   plugin_factory& pf = core_.get_pf();
-  BOOST_AUTO(papi, boost::make_shared<plugin_api::api>());
+  BOOST_AUTO(papi, boost::make_shared<plugin_api::api_translator>());
   papi->do_read_until = boost::bind(&connection::do_read_until, this, _1, _2);
   papi->do_read_some = boost::bind(&connection::do_read_some, this, _1);
   papi->do_write = boost::bind(&connection::do_write, this, _1);

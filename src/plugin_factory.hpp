@@ -13,13 +13,13 @@
 
 namespace eiptnd {
 
-class translator_manager;
+class core;
 
 class plugin_factory
   : private boost::noncopyable
 {
 public:
-  plugin_factory();
+  plugin_factory(core& core);
 
   /// Load plugin from specified path to it.
   void load(const boost::filesystem::path& path_name);
@@ -38,6 +38,9 @@ public:
 private:
   /// Logger instance and channels.
   logging::logger log_;
+
+  ///
+  core& core_;
 
   ///
   translator_manager translator_manager_;
