@@ -15,6 +15,7 @@
 #include <boost/make_shared.hpp>
 
 #include <boost/algorithm/string/trim.hpp>
+#include <boost/iostreams/stream.hpp>
 
 namespace eiptnd {
 
@@ -377,14 +378,16 @@ void wialon_plugin::store_data()
 
 void wialon_plugin::answer(const std::string& msg)
 {
-  /// TODO: Use Boost.Karma for this
-  std::string reply = "#A";
-  reply.append(cmd_).append("#").append(msg);
-  std::copy(reply.begin(), reply.end(), answer_buffer_.begin());
+  boost::iostreams::array_sink as(answer_buffer_.begin(), answer_buffer_.end());
+  boost::iostreams::stream<boost::iostreams::array_sink> os(as);
+  std::size_t size = 2 + cmd_.size() + 1 + msg.size() + 2;
+  os << "#A" << cmd_ << "#" << msg << "\r\n";
 
-  BOOST_LOG_SEV(log_, logging::trace) << "Responding with reply: " << reply;
+  std::string reply(answer_buffer_.begin(), answer_buffer_.begin() + size);
+  BOOST_LOG_SEV(log_, logging::trace)
+    << "Reply data: " << create_escapes(reply);
 
-  api_->do_write(boost::asio::buffer(answer_buffer_));
+  api_->do_write(boost::asio::buffer(answer_buffer_, size));
 }
 
 void wialon_plugin::handle_authenticate(bool ok)
