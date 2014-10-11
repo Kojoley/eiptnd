@@ -3,6 +3,10 @@
 
 #include "log.hpp"
 
+#define BOOST_CHRONO_HEADER_ONLY
+#include "relative_timer.hpp"
+#undef BOOST_CHRONO_HEADER_ONLY
+
 #include <queue>
 #include <boost/asio/ip/tcp.hpp>
 #include <boost/asio/streambuf.hpp>
@@ -19,13 +23,29 @@ class redis_connection
 public:
   redis_connection(boost::asio::io_service& io_service);
 
+  /// Configure timeouts.
+  void set_timeouts(std::size_t connect, std::size_t ping);
+
   /// Connect to Redis server.
   void connect(const std::string& host, const std::string& port);
 
-  /// Publish message.
+  /// Close connection or pending connection.
+  void close();
+
+  /// Try to connect to last connected address.
+  void reconnect();
+
+  /// Send ping (calls callback with tru if reply was got).
+  void ping(bool_callback callback);
+
+  /// Publish message on channel.
   void publish(const std::string& channel, const std::string& message, bool_callback callback);
 
 private:
+  void timeout_connect(const boost::system::error_code& ec, boost::asio::ip::tcp::resolver::iterator endpoint_iterator);
+  void timeout_no_ping(bool ok);
+  void timeout_ping(const boost::system::error_code& ec);
+
   void handle_resolve(const boost::system::error_code& ec, boost::asio::ip::tcp::resolver::iterator endpoint_iterator);
   void connect(boost::asio::ip::tcp::resolver::iterator endpoint_iterator);
   void handle_connect(const boost::system::error_code& ec, boost::asio::ip::tcp::resolver::iterator endpoint_iterator);
@@ -49,6 +69,17 @@ private:
 
   /// Buffer for incoming data.
   boost::asio::streambuf in_buf_;
+
+  /// Timeout timer for reconnect and ping.
+  relative_timer timeout_timer_;
+
+  /// Timeouts duration
+  std::size_t timeout_connect_;
+  std::size_t timeout_ping_;
+
+  /// Remote endpoint host and service name.
+  std::string host_;
+  std::string port_;
 
   bool is_connected_;
 
