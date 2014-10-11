@@ -154,14 +154,14 @@ void
 redis_connection::handle_read(const boost::system::error_code& ec)
 {
   if (!ec) {
-    size_t i = out_tmp_buf_->callbacks.size();
-    size_t left = in_buf_.size();
+    std::size_t i = out_tmp_buf_->callbacks.size();
+    std::size_t left = in_buf_.size();
     try {
       std::string s;
       std::istream is(&in_buf_);
       for (; i > 0 && left >= 4; --i) {
         std::getline(is, s);
-        size_t len = s.size();
+        std::size_t len = s.size();
 
         if (s.at(len - 1) != '\r') {
           break;
@@ -218,7 +218,7 @@ redis_connection::handle_read(const boost::system::error_code& ec)
 void
 redis_connection::drop()
 {
-  size_t len = out_tmp_buf_->callbacks.size();
+  std::size_t len = out_tmp_buf_->callbacks.size();
   BOOST_LOG_SEV(log_, logging::trace)
     << "Dropping " << len << " requests";
 
