@@ -27,7 +27,7 @@ plugin_factory::load(const boost::filesystem::path& path_name)
     << "Plugin loaded uid: " << puid
     << " name: " << pinfo->name()
     << " version: " << pinfo->version()
-    << " path: " << path_name.string();
+    << " path: " << path_name;
 
   BOOST_AUTO(it, plugins_.find(puid));
   if (it != plugins_.end()) {

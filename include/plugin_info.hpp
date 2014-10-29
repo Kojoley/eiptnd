@@ -1,14 +1,12 @@
 #ifndef PLUGIN_INFO_H
 #define PLUGIN_INFO_H
 
+#include "plugin_api.hpp"
+
 #include <iostream>
-
 #include <boost/plugin.hpp>
-
 #include <boost/lambda/bind.hpp>
 #include <boost/lambda/construct.hpp>
-
-#include "plugin_api.hpp"
 
 namespace eiptnd {
 

@@ -2,6 +2,7 @@
 #define TRANSLATOR_MANAGER_HPP
 
 #include "plugin_api.hpp"
+
 #include "plugin_info.hpp"
 #include "log.hpp"
 
@@ -37,7 +38,10 @@ private:
   /// Logger instance and attributes.
   logging::logger log_;
 
+  /// Map uid with loaded translator.
   boost::container::flat_map<puid_t, plugin_info_ptr> loaded_translators_;
+
+  /// Map port to translator uid.
   port_mapping_t port_mapping_;
 
 };

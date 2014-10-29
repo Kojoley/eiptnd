@@ -14,11 +14,12 @@ translator_manager::translator_manager()
 void
 translator_manager::add(plugin_info_ptr info)
 {
+  const puid_t uid = info->puid();
   BOOST_LOG_SEV(log_, logging::info)
     << "Translator was added"
-       " (uid='" << info->puid() << "'"
+       " (uid='" << uid << "'"
        " name='" << info->name() << "')";
-  loaded_translators_.emplace(info->puid(), info);
+  loaded_translators_.emplace(uid, info);
 }
 
 plugin_translator_ptr
@@ -50,7 +51,9 @@ translator_manager::map_port(unsigned short port_num, const puid_t uid)
 
     return false;
   }
-  else if (it->second->type() != plugin_api::PLUGIN_TRANSLATOR) {
+
+  const plugin_info_ptr& p = it->second;
+  if (p->type() != plugin_api::PLUGIN_TRANSLATOR) {
     BOOST_LOG_SEV(log_, logging::warning)
       << "Tried to map port=" << port_num  << " with plugin"
          " (uid='" << uid << "') which is not a translator";
@@ -68,7 +71,7 @@ translator_manager::map_port(unsigned short port_num, const puid_t uid)
 
   BOOST_LOG_SEV(log_, logging::info)
     << "port=" << port_num << " has been mapped with plugin"
-       " (uid='" << uid << "' name='" << it->second->name() << "')";
+       " (uid='" << uid << "' name='" << p->name() << "')";
 
   port_mapping_.emplace(port_num, uid);
 
@@ -94,7 +97,9 @@ translator_manager::load_settings(const boost::property_tree::ptree& settings)
   using boost::property_tree::ptree;
 
   BOOST_FOREACH(const ptree::value_type &plugin, settings) {
-    BOOST_FOREACH(const ptree::value_type &arr, plugin.second.get_child("tcp", empty_ptree<ptree>())) {
+    create(plugin.first)->load_settings(plugin.second); /// FIXME: This is really should be reworked
+    const ptree& tcp = plugin.second.get_child("tcp", empty_ptree<ptree>());
+    BOOST_FOREACH(const ptree::value_type &arr, tcp) {
       BOOST_ASSERT(arr.first.empty());
       map_port(arr.second.get<unsigned short>(""), plugin.first);
     }

@@ -61,7 +61,7 @@ init_logging()
   core->add_global_attribute("TimeStamp", attrs::local_clock());
   core->add_global_attribute("RecordID", attrs::counter<std::size_t>());
 
-  //sink->set_filter(expr::attr<logging::severity_level>("Severity") >= warning);
+  //sink_->set_filter(expr::attr<logging::severity_level>("Severity") <= logging::warning);
   sink_->set_formatter(
     expr::format("[%1%] <%2%>\t[%3%] - %4%")
       % expr::format_date_time<boost::posix_time::ptime>("TimeStamp", "%H:%M:%S.%f")
