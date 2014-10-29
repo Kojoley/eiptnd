@@ -50,9 +50,6 @@ connection::on_connection()
   papi->do_read_until = boost::bind(&connection::do_read_until, this, _1, _2);
   papi->do_read_some = boost::bind(&connection::do_read_some, this, _1);
   papi->do_write = boost::bind(&connection::do_write, this, _1);
-  request_router& rr = pf.get_rr();
-  papi->authenticate = boost::bind(&request_router::authenticate, boost::ref(rr), remote_endpoint.address(), _1, _2, _3);
-  papi->process_data = boost::bind(&request_router::process_data, boost::ref(rr), _1, _2);
 
   translator_manager& tm = pf.get_tm();
   std::string puid;
@@ -61,6 +58,8 @@ connection::on_connection()
     BOOST_LOG_SEV(log_, logging::trace) << i.first << ":" << i.second;
     puid = i.second;
   }
+
+  pf.get_rr().setup_connection_routes(puid, *papi, local_endpoint.port(), remote_endpoint.address());
 
   process_handler_ = tm.create(puid);
   process_handler_->setup_api(papi);

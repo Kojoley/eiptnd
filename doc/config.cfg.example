@@ -12,6 +12,20 @@
         "tcp" : [ 4444 ]
       }
 
+    },
+
+    "dispatcher" : {
+
+      "logger-example" : {
+        "source": { "wialon"   : { "tcp" : [ 4444 ] } }
+      },
+
+      "redis" : {
+        "host" : "localhost",
+        "port" : 6789,
+        "source": { "wialon"   : { "tcp" : [ 4444 ] } }
+      }
+
     }
 
   }
