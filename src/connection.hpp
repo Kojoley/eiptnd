@@ -37,6 +37,8 @@ public:
   /// Reading API.
   void do_read_some(const boost::asio::mutable_buffer& buffer);
   void do_read_until(boost::asio::streambuf& sbuf, const std::string& delim);
+  void do_read_at_least(boost::asio::streambuf& sbuf, std::size_t minimum);
+
 
   /// Writing API.
   void do_write(const boost::asio::const_buffer& buffer);

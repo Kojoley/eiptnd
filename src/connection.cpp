@@ -46,6 +46,7 @@ connection::on_connection()
 
   plugin_factory& pf = core_.get_pf();
   BOOST_AUTO(papi, boost::make_shared<plugin_api::api_translator>());
+  papi->do_read_at_least = boost::bind(&connection::do_read_at_least, this, _1, _2);
   papi->do_read_until = boost::bind(&connection::do_read_until, this, _1, _2);
   papi->do_read_some = boost::bind(&connection::do_read_some, this, _1);
   papi->do_write = boost::bind(&connection::do_write, this, _1);
@@ -76,6 +77,14 @@ connection::do_read2(const boost::asio::mutable_buffer& buffers)
 }*/
 
 void
+connection::do_read_at_least(boost::asio::streambuf& sbuf, std::size_t minimum)
+{
+  boost::asio::async_read(socket_, sbuf, boost::asio::transfer_at_least(minimum),
+      strand_.wrap(
+        boost::bind(&connection::handle_read, shared_from_this(), _1, _2)));
+}
+
+void
 connection::do_read_until(boost::asio::streambuf& sbuf, const std::string& delim)
 {
   boost::asio::async_read_until(socket_, sbuf, delim,
@@ -104,7 +113,7 @@ void
 connection::handle_read(const boost::system::error_code& ec,
     std::size_t bytes_transferred)
 {
-  if (!ec) {
+  if (!ec && bytes_transferred > 0) {
     process_handler_->handle_read(bytes_transferred);
   }
   else if (ec == boost::asio::error::eof) {

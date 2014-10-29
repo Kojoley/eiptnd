@@ -42,6 +42,7 @@ typedef boost::signals2::signal<void(bool)>::slot_type process_data_callback;
 
 struct api_translator
 {
+  boost::function<void(boost::asio::streambuf& sbuf, std::size_t minimum)> do_read_at_least;
   boost::function<void(boost::asio::streambuf&, const std::string& delim)> do_read_until;
   boost::function<void(const boost::asio::mutable_buffer&)> do_read_some;
   boost::function<void(const boost::asio::const_buffer&)> do_write;
