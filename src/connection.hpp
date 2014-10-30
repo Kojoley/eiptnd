@@ -7,6 +7,7 @@
 #include <boost/asio/io_service.hpp>
 #include <boost/asio/ip/tcp.hpp>
 #include <boost/asio/strand.hpp>
+#include <boost/weak_ptr.hpp>
 #include <boost/enable_shared_from_this.hpp>
 #include <boost/noncopyable.hpp>
 #include <boost/shared_ptr.hpp>
@@ -45,11 +46,15 @@ public:
 
 private:
   /// Handle completion of a read operation.
-  void handle_read(const boost::system::error_code& ec,
+  void handle_read(
+      boost::shared_ptr<plugin_api::translator> process_handler,
+      const boost::system::error_code& ec,
       std::size_t bytes_transferred);
 
   /// Handle completion of a write operation.
-  void handle_write(const boost::system::error_code& ec);
+  void handle_write(
+      boost::shared_ptr<plugin_api::translator> process_handler,
+      const boost::system::error_code& ec);
 
   /// Logger instance and attributes.
   logging::logger log_;
@@ -65,7 +70,7 @@ private:
   boost::asio::ip::tcp::socket socket_;
 
   /// The handler used to process the data.
-  boost::shared_ptr<plugin_api::translator> process_handler_;
+  boost::weak_ptr<plugin_api::translator> process_handler_;
 };
 
 typedef boost::shared_ptr<connection> connection_ptr;
