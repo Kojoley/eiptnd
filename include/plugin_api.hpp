@@ -10,7 +10,6 @@
 #include <boost/plugin/alias.hpp>
 #include <boost/property_tree/ptree.hpp>
 #include <boost/shared_ptr.hpp>
-#include <boost/signals2/signal.hpp>
 #include <boost/typeof/typeof.hpp>
 
 namespace boost { namespace asio { class io_service; } }
@@ -37,12 +36,12 @@ public:
 };
 
 
-typedef boost::signals2::signal<void(bool)>::slot_type authenticate_callback;
-typedef boost::signals2::signal<void(bool)>::slot_type process_data_callback;
+typedef boost::function<void(bool)> authenticate_callback;
+typedef boost::function<void(bool)> process_data_callback;
 
 struct api_translator
 {
-  boost::function<void(boost::asio::streambuf& sbuf, std::size_t minimum)> do_read_at_least;
+  boost::function<void(boost::asio::streambuf&, std::size_t minimum)> do_read_at_least;
   boost::function<void(boost::asio::streambuf&, const std::string& delim)> do_read_until;
   boost::function<void(const boost::asio::mutable_buffer&)> do_read_some;
   boost::function<void(const boost::asio::const_buffer&)> do_write;

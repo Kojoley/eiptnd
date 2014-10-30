@@ -7,6 +7,7 @@
 #include <iostream>
 #include <boost/array.hpp>
 #include <boost/atomic/atomic.hpp>
+#include <boost/enable_shared_from_this.hpp>
 #include <boost/property_tree/ptree.hpp>
 #include <boost/shared_ptr.hpp>
 #include <boost/container/flat_map.hpp>
@@ -15,7 +16,8 @@
 namespace eiptnd {
 
 class wialon_plugin
-  : public plugin_api::translator
+  : public boost::enable_shared_from_this<wialon_plugin>
+  , public plugin_api::translator
 {
 public:
   wialon_plugin();
@@ -111,12 +113,6 @@ private:
   typedef std::vector<fields_type> fields_subtype;
   typedef const boost::array<fields_subtype, COMMAND_COUNT> fields_t;
   static fields_t fields_;
-
-  /// Callback for authentication request
-  plugin_api::authenticate_callback authenticate_callback_;
-
-  /// Callback for data processing request
-  plugin_api::process_data_callback process_data_callback_;
 };
 
 DECLARE_PLUGIN(wialon_plugin)

@@ -87,8 +87,6 @@ wialon_plugin::fields_t wialon_plugin::fields_ = boost::assign::list_of<fields_s
 
 wialon_plugin::wialon_plugin()
   : log_(boost::log::keywords::channel = uid())
-  , authenticate_callback_(boost::bind(&wialon_plugin::handle_authenticate, this, _1))
-  , process_data_callback_(boost::bind(&wialon_plugin::handle_process_data, this, _1))
 {
   BOOST_LOG_SEV(log_, logging::trace) << name() << " created";
 
@@ -340,7 +338,7 @@ void wialon_plugin::commit_command()
       api_->authenticate(
           tree_->get<std::string>("imei"),
           tree_->get<std::string>("password"),
-          authenticate_callback_);
+          boost::bind(&wialon_plugin::handle_authenticate, shared_from_this(), _1));
     }
     break;
 
@@ -373,7 +371,7 @@ void wialon_plugin::commit_command()
 
 void wialon_plugin::store_data()
 {
-  api_->process_data(tree_, process_data_callback_);
+  api_->process_data(tree_, boost::bind(&wialon_plugin::handle_process_data, shared_from_this(), _1));
 }
 
 void wialon_plugin::answer(const std::string& msg)
