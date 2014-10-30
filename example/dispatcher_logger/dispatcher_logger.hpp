@@ -22,9 +22,14 @@ public:
 
   void handle_process_data(boost::shared_ptr<boost::property_tree::ptree> tree, plugin_api::process_data_callback callback);
 
+  void load_settings(const boost::property_tree::ptree& settings);
+
 private:
   /// Logger instance and attributes.
   logging::logger log_;
+
+  /// Delay for callback response.
+  std::size_t delay_;
 };
 
 DECLARE_PLUGIN(dispatcher_logger)
