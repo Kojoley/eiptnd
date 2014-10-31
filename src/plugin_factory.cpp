@@ -33,7 +33,7 @@ plugin_factory::load(const boost::filesystem::path& path_name)
   if (it != plugins_.end()) {
     BOOST_LOG_SEV(log_, logging::error)
       << "Plugin with same uid='" << puid << "' is already loaded"
-         " from " << it->second->library().path();
+         " from " << it->second->library().location();
     return;
   }
 
@@ -70,7 +70,7 @@ plugin_factory::load_dir(const boost::filesystem::path& path_dir)
     const std::string extension
         = boost::algorithm::to_lower_copy(path_name.extension().string());
 
-    if (boost::plugin::shared_library::suffix() == extension) {
+    if (boost::dll::shared_library::suffix() == extension) {
       BOOST_LOG_SEV(log_, logging::info)
         << "Found plugin: " << path_name.string();
 

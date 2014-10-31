@@ -7,10 +7,8 @@
 #include <boost/asio/streambuf.hpp>
 #include <boost/function.hpp>
 #include <boost/make_shared.hpp>
-#include <boost/plugin/alias.hpp>
 #include <boost/property_tree/ptree.hpp>
 #include <boost/shared_ptr.hpp>
-#include <boost/typeof/typeof.hpp>
 
 namespace boost { namespace asio { class io_service; } }
 
@@ -79,13 +77,12 @@ protected:
   boost::shared_ptr<api_dispatcher> api_;
 };
 
-boost::shared_ptr<interface> create_shared();
+typedef boost::shared_ptr<interface> create_shared();
 
 } // plugin_api
 
 typedef boost::shared_ptr<plugin_api::interface> plugin_interface_ptr;
 typedef boost::function<plugin_interface_ptr()> plugin_interface_ptr_fn;
-typedef BOOST_TYPEOF(&plugin_api::create_shared) create_shared_fn;
 
 typedef boost::shared_ptr<plugin_api::translator> plugin_translator_ptr;
 typedef boost::shared_ptr<plugin_api::dispatcher> plugin_dispatcher_ptr;
@@ -96,7 +93,6 @@ typedef boost::shared_ptr<plugin_api::dispatcher> plugin_dispatcher_ptr;
   LIBRARY_API eiptnd::plugin_interface_ptr        \
   create_shared(void)                             \
   { return boost::make_shared<T>(); }             \
-  BOOST_PLUGIN_ALIAS(create_shared, create_plugin)
 // DECLARE_PLUGIN
 
 #endif // PLUGIN_API_H
