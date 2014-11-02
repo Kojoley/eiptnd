@@ -96,7 +96,7 @@ request_router::authenticate(const boost::asio::ip::address& address, std::strin
 }
 
 void
-request_router::process_data(dispatchers_vector_ptr dispatch_targets, boost::shared_ptr<boost::property_tree::ptree> tree, plugin_api::process_data_callback callback)
+request_router::process_data(dispatchers_vector_ptr dispatch_targets, boost::shared_ptr<dptree> tree, plugin_api::process_data_callback callback)
 {
   using namespace plugin_api;
 

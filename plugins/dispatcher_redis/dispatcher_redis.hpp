@@ -22,7 +22,7 @@ public:
 
   const char* version() { return "0.1"; }
 
-  void handle_process_data(boost::shared_ptr<boost::property_tree::ptree> tree, plugin_api::process_data_callback callback);
+  void handle_process_data(boost::shared_ptr<dptree> tree, plugin_api::process_data_callback callback);
 
   void load_settings(const boost::property_tree::ptree& settings);
 

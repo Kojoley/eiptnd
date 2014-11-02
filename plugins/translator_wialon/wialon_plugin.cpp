@@ -1,5 +1,7 @@
 #include "wialon_plugin.hpp"
 
+#include "dptree_json.hpp" /// for commit_command
+
 #include <boost/container/vector.hpp>
 #include <boost/algorithm/string/split.hpp>
 #include <boost/algorithm/string/join.hpp>
@@ -9,7 +11,7 @@
 #include <boost/foreach.hpp>
 
 #include <boost/assign/list_of.hpp>
-#include <boost/property_tree/json_parser.hpp>
+#include <boost/property_tree/json_parser.hpp> /// for create_escapes
 #include <boost/lexical_cast.hpp>
 #include <boost/typeof/std/utility.hpp>
 #include <boost/make_shared.hpp>
@@ -209,8 +211,7 @@ void wialon_plugin::consume_token(const std::string& tok)
 
   switch (state_) {
   case STATE_INITIAL:
-    //tree_.reset(boost::make_shared<boost::property_tree::ptree>());
-    boost::make_shared<boost::property_tree::ptree>().swap(tree_);
+    boost::make_shared<dptree>().swap(tree_);
     is_parser_error_ = false;
     multicommand_ = 0;
     cmd_ = "<not initialized>";
@@ -258,7 +259,7 @@ void wialon_plugin::consume_token(const std::string& tok)
     if (current_cmd_ == COMMAND_BLACKBOX  && "|" == tok) {
       store_data();
       boost::tie(estimate_, current_cmd_) = estimates_.at(cmd_);
-      boost::make_shared<boost::property_tree::ptree>().swap(tree_);
+      boost::make_shared<dptree>().swap(tree_);
       break;
     }
 

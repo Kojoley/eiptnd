@@ -31,7 +31,7 @@ public:
 
   void authenticate(const boost::asio::ip::address& address, std::string id, std::string password, plugin_api::authenticate_callback callback);
 
-  void process_data(dispatchers_vector_ptr dispatch_targets, boost::shared_ptr<boost::property_tree::ptree> tree, plugin_api::process_data_callback callback);
+  void process_data(dispatchers_vector_ptr dispatch_targets, boost::shared_ptr<dptree> tree, plugin_api::process_data_callback callback);
 
   void load_settings(const boost::property_tree::ptree& settings);
 

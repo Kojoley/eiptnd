@@ -3,6 +3,8 @@
 
 #define LIBRARY_API extern "C" BOOST_SYMBOL_EXPORT
 
+#include "dptree.hpp"
+
 #include <boost/asio/buffer.hpp>
 #include <boost/asio/streambuf.hpp>
 #include <boost/function.hpp>
@@ -45,7 +47,7 @@ struct api_translator
   boost::function<void(const boost::asio::const_buffer&)> do_write;
 
   boost::function<void(std::string, std::string, authenticate_callback)> authenticate;
-  boost::function<void(boost::shared_ptr<boost::property_tree::ptree>, process_data_callback)> process_data;
+  boost::function<void(boost::shared_ptr<dptree>, process_data_callback)> process_data;
 };
 
 class translator
@@ -71,7 +73,7 @@ class dispatcher
 {
 public:
   virtual plugin_type type() { return PLUGIN_DISPATCHER; }
-  virtual void handle_process_data(boost::shared_ptr<boost::property_tree::ptree> tree, process_data_callback callback) = 0;
+  virtual void handle_process_data(boost::shared_ptr<dptree> tree, process_data_callback callback) = 0;
   void setup_api(boost::shared_ptr<api_dispatcher> p) { api_ = p; }
 protected:
   boost::shared_ptr<api_dispatcher> api_;

@@ -64,7 +64,7 @@ private:
   std::size_t estimate_;
 
   /// Tree for storing data by parser that will be processed by dispatcher
-  boost::shared_ptr<boost::property_tree::ptree> tree_;
+  boost::shared_ptr<dptree> tree_;
 
   /// COMMAND_BLACKBOX parsed (and stored) data blocks
   boost::atomic<std::size_t> multicommand_;

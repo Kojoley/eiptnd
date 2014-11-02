@@ -1,9 +1,9 @@
 #include "dispatcher_logger.hpp"
 
+#include "dptree_json.hpp"
 #include "relative_timer.hpp"
 
 #include <boost/enable_shared_from_this.hpp>
-#include <boost/property_tree/json_parser.hpp>
 
 namespace eiptnd {
 
@@ -49,7 +49,7 @@ dispatcher_logger::~dispatcher_logger()
 }
 
 void
-dispatcher_logger::handle_process_data(boost::shared_ptr<boost::property_tree::ptree> tree, plugin_api::process_data_callback callback)
+dispatcher_logger::handle_process_data(boost::shared_ptr<dptree> tree, plugin_api::process_data_callback callback)
 {
   std::stringstream ss;
   boost::property_tree::json_parser::write_json(ss, *tree, true);

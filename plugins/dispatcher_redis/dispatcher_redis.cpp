@@ -1,6 +1,6 @@
 #include "dispatcher_redis.hpp"
 
-#include <boost/property_tree/json_parser.hpp>
+#include "dptree_json.hpp"
 
 namespace eiptnd {
 
@@ -18,7 +18,7 @@ dispatcher_redis::~dispatcher_redis()
 }
 
 void
-dispatcher_redis::handle_process_data(boost::shared_ptr<boost::property_tree::ptree> tree, plugin_api::process_data_callback callback)
+dispatcher_redis::handle_process_data(boost::shared_ptr<dptree> tree, plugin_api::process_data_callback callback)
 {
   std::stringstream ss;
   boost::property_tree::json_parser::write_json(ss, *tree, pretty_);
