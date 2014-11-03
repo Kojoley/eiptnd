@@ -5,21 +5,26 @@
 #include <boost/property_tree/ptree.hpp>
 #include <boost/variant.hpp>
 
+namespace eiptnd {
+
 typedef boost::variant<
     std::string
-  //, int, long, unsigned int, unsigned long, long long int, unsigned long long int
-  //, int, long, unsigned int, unsigned long, std::size_t, std::ptrdiff_t
-  //, boost::int8_t, boost::int16_t, boost::int32_t, boost::int64_t
-  //, boost::uint8_t, boost::uint16_t, boost::uint32_t, boost::uint64_t
-  , boost::int_least8_t, boost::int_least16_t, boost::int_least32_t, boost::int_least64_t
-  , boost::uint_least8_t, boost::uint_least16_t, boost::uint_least32_t, boost::uint_least64_t
+  /// TODO: I don't like this integral type enumeration
+  , boost::int_least8_t,  boost::uint_least8_t
+  , boost::int_least16_t, boost::uint_least16_t
+  , boost::int_least32_t, boost::uint_least32_t
+  , boost::int_least64_t, boost::uint_least64_t
   , float, double
   , bool
   > dptree_value;
 typedef boost::property_tree::basic_ptree<std::string, dptree_value> dptree;
 
+} // namespace eiptnd
+
 namespace boost {
 namespace property_tree {
+
+using namespace eiptnd;
 
 template <typename External>
 struct dptree_translator;

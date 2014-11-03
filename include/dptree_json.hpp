@@ -2,6 +2,7 @@
 #define DPTREE_JSON_HPP
 
 #include <boost/property_tree/json_parser.hpp>
+#include <boost/variant.hpp>
 
 namespace boost {
 namespace property_tree {
