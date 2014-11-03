@@ -176,7 +176,7 @@ redis_connection::publish(const std::string& channel,
       "$" << karma::uint_ << "\r\n" << boost::spirit::ascii::string << "\r\n"
     , channel_len, channel, message_len, message);
 
-  BOOST_ASSERT(buf_size >= buf_endp - buf_beginp);
+  BOOST_ASSERT(buf_size >= static_cast<std::size_t>(buf_endp - buf_beginp));
   out_buf_->data.commit(buf_endp - buf_beginp);
 
   out_buf_->callbacks.push(callback);

@@ -43,7 +43,7 @@ void write_json_helper(std::basic_ostream<dptree::key_type::value_type> &stream,
                        int indent, bool pretty)
 {
     typedef dptree::key_type::value_type Ch;
-    typedef typename std::basic_string<Ch> Str;
+    typedef std::basic_string<Ch> Str;
 
     // Value or object or array
     if (indent > 0 && pt.empty())

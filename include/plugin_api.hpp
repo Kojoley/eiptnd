@@ -1,7 +1,13 @@
 #ifndef PLUGIN_API_H
 #define PLUGIN_API_H
 
-#define LIBRARY_API extern "C" BOOST_SYMBOL_EXPORT
+#ifndef BOOST_MSVC
+#  define MANGLING_MODE extern "C"
+#else
+#  define MANGLING_MODE
+#endif
+
+#define LIBRARY_API MANGLING_MODE BOOST_SYMBOL_EXPORT
 
 #include "dptree.hpp"
 

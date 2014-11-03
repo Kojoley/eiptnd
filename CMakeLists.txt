@@ -19,14 +19,7 @@ set(${PROJECT_NAME}_USE_PRECOMPILED_HEADER TRUE CACHE BOOL "Use precompiled head
 set(${PROJECT_NAME}_BUILD_PLUGINS FALSE CACHE BOOL "Build plugins")
 set(${PROJECT_NAME}_BUILD_EXAMPLES FALSE CACHE BOOL "Build examples")
 
-# Enable compiler warnings
-if(CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
-  set_property(TARGET ${PROJECT_NAME} APPEND PROPERTY COMPILE_FLAGS "/Wall")
-elseif(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-  set_property(TARGET ${PROJECT_NAME} APPEND PROPERTY COMPILE_FLAGS "-Weverything")
-elseif(CMAKE_CXX_COMPILER_ID MATCHES "GNU")
-  set_property(TARGET ${PROJECT_NAME} APPEND PROPERTY COMPILE_FLAGS "-Wall -Wextra -pedantic")
-endif()
+enable_all_warnings(${PROJECT_NAME})
 
 if(WIN32)
   # Determine and define _WIN32_WINNT
@@ -53,6 +46,7 @@ add_definitions(-DBOOST_LIB_DIAGNOSTIC)
 add_definitions(-DBOOST_APPLICATION_FEATURE_NS_SELECT_BOOST)
 # Finally find Boost
 find_package(Boost COMPONENTS
+    date_time regex chrono atomic
     system
     thread
     program_options
@@ -80,6 +74,9 @@ endif()
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR})
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR})
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR})
+if(MSVC)
+  set(CMAKE_MODULE_LINKER_FLAGS "/DEF:${CMAKE_SOURCE_DIR}\\include\\plugin.def")
+endif()
 
 if(${${PROJECT_NAME}_BUILD_PLUGINS})
   add_subdirectory(plugins)

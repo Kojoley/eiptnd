@@ -104,6 +104,8 @@ private:
     COMMAND_COUNT
   } current_cmd_;
 
+  friend inline std::ostream& operator<<(std::ostream &os, const wialon_plugin::state_t state);
+
   /// Estimate tokens to consume in STATE_BODY
   typedef const boost::container::flat_map<std::string, boost::tuple<std::size_t, command_t> > estimates_t;
   static estimates_t estimates_;

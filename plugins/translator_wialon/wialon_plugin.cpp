@@ -23,9 +23,7 @@ namespace eiptnd {
 
 using boost::property_tree::json_parser::create_escapes;
 
-template <typename CharT, typename TraitsT>
-inline std::basic_ostream<CharT, TraitsT>& operator<< (
-  std::basic_ostream<CharT, TraitsT>& os, const wialon_plugin::state_t state)
+inline std::ostream& operator<<(std::ostream &os, const wialon_plugin::state_t state)
 {
   static const char* strings[] = {
     "STATE_INITIAL",
@@ -108,7 +106,7 @@ void wialon_plugin::handle_start()
   api_->do_read_until(sbuf_, "\r\n");
 }
 
-void wialon_plugin::handle_read(std::size_t bytes_transferred)
+void wialon_plugin::handle_read(std::size_t /*bytes_transferred*/)
 {
   std::string msg;
   std::istream is(&sbuf_);
@@ -202,6 +200,9 @@ void wialon_plugin::consume_token(const std::string& tok)
 
     case STATE_END:
       commit_command();
+      break;
+
+    default:
       break;
     }
     }
@@ -307,6 +308,9 @@ void wialon_plugin::consume_token(const std::string& tok)
     state_ = STATE_SKIP_TO_END;
     unexpected_token("\\r\\n", tok);
     break;
+
+  default:
+    break;
   }
 }
 
@@ -366,6 +370,9 @@ void wialon_plugin::commit_command()
     estimate_ = tree_->get<std::size_t>("sz");
     /// Read binary and then set to STATE_INITIAL
     /// delayed answer
+    break;
+
+  default:
     break;
   }
 }

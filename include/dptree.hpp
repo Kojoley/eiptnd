@@ -42,7 +42,6 @@ struct dptree_translator
   { return internal_type(v); }
 };
 
-template <>
 template <typename Ch>
 struct dptree_translator<std::basic_string<Ch> >
 {

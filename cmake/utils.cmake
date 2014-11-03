@@ -13,3 +13,19 @@ macro(init_winver)
          winver ${CMAKE_SYSTEM_VERSION})
   add_definitions("-D_WIN32_WINNT=${winver}")
 endmacro()
+
+macro(append_compile_flags target_name flags)
+  set_property(TARGET ${target_name} APPEND_STRING
+               PROPERTY COMPILE_FLAGS " ${flags}")
+endmacro()
+
+macro(enable_all_warnings target_name)
+  # Enable compiler warnings
+  if(CMAKE_C_COMPILER_ID MATCHES "MSVC")
+    append_compile_flags(${target_name} "/Wall")
+  elseif(CMAKE_C_COMPILER_ID MATCHES "Clang")
+    append_compile_flags(${target_name} "-Weverything")
+  elseif(CMAKE_C_COMPILER_ID MATCHES "GNU")
+    append_compile_flags(${target_name} "-Wall -Wextra -pedantic")
+  endif()
+endmacro()

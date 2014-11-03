@@ -92,11 +92,10 @@ core::operator()()
     load_settings();
     run();
   }
-  catch (const boost::exception& e) {
+  catch (const boost::exception&) {
     BOOST_LOG_SEV(log_, logging::global)
       << "Shutting down after an unrecoverable error";
     ret = EXIT_FAILURE;
-    throw;
   }
 
   BOOST_AUTO(logging_core, boost::log::core::get());
