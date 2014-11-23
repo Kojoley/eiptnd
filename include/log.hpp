@@ -41,7 +41,7 @@ inline std::basic_ostream<CharT, TraitsT>& operator<< (
   os << strings[level / 0x200];
 
   if (level % 0x200) {
-    os << ":" << static_cast<std::size_t>(level);
+    os << CharT(':') << static_cast<std::size_t>(level);
   }
 
   return os;
