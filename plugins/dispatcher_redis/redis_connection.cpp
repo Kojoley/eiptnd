@@ -1,6 +1,5 @@
 #include "redis_connection.hpp"
 
-#include <boost/asio/io_service.hpp>
 #include <boost/asio/read.hpp>
 #include <boost/asio/write.hpp>
 #include <boost/asio/ip/tcp.hpp>
@@ -11,12 +10,12 @@
 
 using namespace boost::asio::ip;
 
-redis_connection::redis_connection(boost::asio::io_service& io_service)
+redis_connection::redis_connection(boost::shared_ptr<boost::asio::io_service> io_service)
   : log_(boost::log::keywords::channel = "redis-client")
   , io_service_(io_service)
-  , resolver_(io_service_)
-  , socket_(io_service_)
-  , timeout_timer_(io_service_)
+  , resolver_(*io_service_)
+  , socket_(*io_service_)
+  , timeout_timer_(*io_service_)
   , timeout_connect_(10)
   , timeout_ping_(30)
   , is_connected_(false)
@@ -84,7 +83,7 @@ redis_connection::timeout_connect(const boost::system::error_code& ec, tcp::reso
       << "Server does not respond. Retrying...";
 
     socket_.cancel();
-    connect(endpoint_iterator);
+    if (timeout_connect_) connect(endpoint_iterator);
   }
 }
 
@@ -96,8 +95,10 @@ redis_connection::timeout_no_ping(bool ok)
       << "Got Pong!";
 
     timeout_timer_.cancel();
-    timeout_timer_.expires_from_now(boost::chrono::seconds(timeout_ping_));
-    timeout_timer_.async_wait(boost::bind(&redis_connection::timeout_ping, this, _1));
+    if (timeout_ping_) {
+      timeout_timer_.expires_from_now(boost::chrono::seconds(timeout_ping_));
+      timeout_timer_.async_wait(boost::bind(&redis_connection::timeout_ping, this, _1));
+    }
   }
   else {
     BOOST_LOG_SEV(log_, logging::trace)

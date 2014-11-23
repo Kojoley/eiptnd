@@ -1,9 +1,8 @@
 #ifndef TRANSLATOR_MANAGER_HPP
 #define TRANSLATOR_MANAGER_HPP
 
-#include "plugin_api.hpp"
-
-#include "plugin_info.hpp"
+#include "plugin/plugin_translator.hpp"
+#include "plugin/plugin_info.hpp"
 #include "log.hpp"
 
 #include <boost/container/flat_map.hpp>

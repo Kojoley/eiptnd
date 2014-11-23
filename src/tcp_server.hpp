@@ -15,31 +15,20 @@ namespace eiptnd {
 class core;
 
 class tcp_server
-  : private boost::noncopyable
+  : public boost::enable_shared_from_this<tcp_server>
+  , private boost::noncopyable
 {
 public:
   explicit tcp_server(core& core,
                   const std::string& address, unsigned short port_num);
 
-  /*server(BOOST_RV_REF(server) x)            /// Move ctor
-     : thread_pool_size_(x.thread_pool_size_)
-     , io_service_(io_service_)
-     , signals_(boost::move(signals_))
-     , acceptor_(boost::move(acceptor_))
-  {
-  }
-
-  server& operator=(BOOST_RV_REF(server) x) /// Move assign
-  {
-     return *this;
-  }*/
-
-private:
-  /*BOOST_MOVABLE_BUT_NOT_COPYABLE(server);*/
-
   /// Initiate an asynchronous accept operation.
   void start_accept();
 
+  /// Cancel accepting new connections
+  void cancel();
+
+private:
   /// Handle completion of an asynchronous accept operation.
   void handle_accept(const boost::system::error_code& ec);
 
@@ -48,6 +37,8 @@ private:
 
   ///
   core& core_;
+
+  boost::shared_ptr<boost::asio::io_service> io_service_;
 
   /// Acceptor used to listen for incoming connections.
   boost::asio::ip::tcp::acceptor acceptor_;

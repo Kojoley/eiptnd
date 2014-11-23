@@ -2,6 +2,7 @@
 
 #include "core.hpp"
 #include "empty_ptree.hpp"
+#include "plugin/plugin_translator.hpp"
 
 #include <boost/foreach.hpp>
 #include <boost/range/adaptor/map.hpp>
@@ -69,7 +70,7 @@ request_router::create(puid_t uid)
     plugin_dispatcher_ptr dispatcher = boost::dynamic_pointer_cast<plugin_api::dispatcher>(plugin);
 
     boost::shared_ptr<plugin_api::api_dispatcher> api = boost::make_shared<plugin_api::api_dispatcher>();
-    api->io_service = boost::bind(&core::get_ios, &core_);
+    api->io_service = core_.get_ios();
     dispatcher->setup_api(api);
     return dispatcher;
   }
@@ -100,7 +101,7 @@ request_router::process_data(dispatchers_vector_ptr dispatch_targets, boost::sha
 {
   using namespace plugin_api;
 
-  boost::asio::io_service& io_service = core_.get_ios();
+  boost::asio::io_service& io_service = *core_.get_ios();
   std::size_t n = dispatch_targets->size();
   if (n > 1) {
     typedef combiner<process_data_callback, bool, true> combiner_t;
@@ -155,9 +156,9 @@ request_router::load_settings(const boost::property_tree::ptree& settings)
   }
 }
 
-inline void helper_callback_false(boost::asio::io_service& io_service, plugin_api::process_data_callback callback)
+inline void helper_callback_false(boost::shared_ptr<boost::asio::io_service> io_service, plugin_api::process_data_callback callback)
 {
-  io_service.post(boost::bind(callback, false));
+  io_service->post(boost::bind(callback, false));
 }
 
 void
@@ -178,7 +179,7 @@ request_router::setup_connection_routes(puid_t uid, plugin_api::api_translator& 
       boost::ref(io_service),
       boost::protect(boost::bind(_2, false)));
 #else
-    papi.process_data = boost::bind(helper_callback_false, boost::ref(core_.get_ios()), _2);
+    papi.process_data = boost::bind(helper_callback_false, core_.get_ios(), _2);
 #endif
   }
 }

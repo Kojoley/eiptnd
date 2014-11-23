@@ -15,7 +15,7 @@ int main(int argc, char* argv[])
   namespace app = boost::application;
   namespace po = boost::program_options;
 
-  po::variables_map vm;
+  boost::shared_ptr<po::variables_map> vm = boost::make_shared<po::variables_map>();
 
   po::options_description general("General options");
   general.add_options()
@@ -49,7 +49,8 @@ int main(int argc, char* argv[])
   po::options_description service("Service Options");
 
   service.add_options()
-    ("install", "install service")
+    ("install", po::value<std::string>()
+                  ->value_name("options"), "install service")
     ("uninstall", "unistall service")
   ;
 
@@ -58,13 +59,8 @@ int main(int argc, char* argv[])
 
   try {
     po::store(po::command_line_parser(argc, argv)
-        .options(desc).run(), vm);
-    //std::ifstream ifs(DEFAULT_CONFIG_PATH));
-    //if (ifs.is_open()) {
-    //  po::store(po::parse_config_file(ifs, network, vm);
-    //  ifs.close();
-    //}
-    po::notify(vm);
+        .options(desc).run(), *vm);
+    po::notify(*vm);
   }
   catch (const std::exception& e) {
     std::cerr << e.what() << std::endl;
@@ -73,7 +69,7 @@ int main(int argc, char* argv[])
     return EXIT_FAILURE;
   }
 
-  if (vm.count("version")) {
+  if (vm->count("version")) {
     std::cout << DAEMON_VERSION << std::endl;
 
     return EXIT_SUCCESS;
@@ -81,7 +77,7 @@ int main(int argc, char* argv[])
 
   std::cout << DAEMON_INFO "\n" << std::endl;
 
-  if (vm.count("help")) {
+  if (vm->count("help")) {
     std::cout << desc << std::endl;
     return EXIT_SUCCESS;
   }
@@ -98,53 +94,53 @@ int main(int argc, char* argv[])
   boost::shared_ptr<app::path> pt = app_ctx.find<app::path>();
   boost::filesystem::path exec_path = pt->executable_path_name();
 
-  if (vm.count("install")) {
+  if (vm->count("install")) {
     app::example::install_windows_service(
       app::setup_arg(DAEMON_NAME_SHORT),
       app::setup_arg(DAEMON_NAME_FULL),
       app::setup_arg(DAEMON_DESCRIPTION),
-      app::setup_arg(exec_path)).install(ec);
+      app::setup_arg(exec_path),
+      app::setup_arg(""),
+      app::setup_arg(""),
+      app::setup_arg((*vm)["install"].as<std::string>())).install(ec);
 
     if (ec) {
-      std::cerr << ec.message() << std::endl;
-      return EXIT_FAILURE;
+      std::cerr << "Couldn't install service: " << ec.message() << std::endl;
+      return  EXIT_FAILURE;
     }
-  }
 
-  if (vm.count("uninstall")) {
+    std::cout << "Service is installed" << std::endl;
+  }
+  else if (vm->count("uninstall")) {
     app::example::uninstall_windows_service(
-      app::setup_arg(DAEMON_NAME_FULL),
+      app::setup_arg(DAEMON_NAME_SHORT),
       app::setup_arg(exec_path)).uninstall(ec);
 
     if (ec) {
-      std::cerr << ec.message() << std::endl;
-      return EXIT_FAILURE;
+      std::cerr << "Couldn't uninstall service: " << ec.message() << std::endl;
+      return  EXIT_FAILURE;
     }
+    std::cout << "Service is uninstalled" << std::endl;
   }
+  else
 #endif
+  {
+    app_ctx.insert(vm);
+    app::auto_handler<eiptnd::core> app_core(app_ctx);
 
-  eiptnd::core app_core(app_ctx, vm);
-  //app::auto_handler<eiptnd::core> app(app_ctx, vm);
+    if (vm->count("foreground")) {
+      result = app::launch<app::common>(app_core, app_ctx, ec);
+    }
+    else {
+      std::cout << "Deamonizing..." << std::endl;
+      result = app::launch<app::server>(app_core, app_ctx, ec);
+    }
 
-  app::handler<>::callback termination_callback
-    = boost::bind<bool>(&eiptnd::core::stop, &app_core);
-
-  app_ctx.insert<app::termination_handler>(
-    boost::make_shared<
-      app::termination_handler_default_behaviour>(termination_callback));
-
-  if (vm.count("foreground")) {
-    result = app::launch<app::common>(app_core, app_ctx, ec);
-  }
-  else {
-    std::cout << "Deamonizing..." << std::endl;
-    result = app::launch<app::server>(app_core, app_ctx, ec);
-  }
-
-  if (ec) {
-    std::cerr << "[main::Error] " << ec.message()
-              << " (" << ec.value() << ")" << std::endl;
-    result = EXIT_FAILURE;
+    if (ec) {
+      std::cerr << "[main::Error] " << ec.message()
+                << " (" << ec.value() << ")" << std::endl;
+      result = EXIT_FAILURE;
+    }
   }
 
   std::cout << "Bye!" << std::endl;

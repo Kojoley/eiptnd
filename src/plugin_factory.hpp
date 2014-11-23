@@ -1,8 +1,7 @@
 #ifndef PLUGIN_FACTORY_HPP
 #define PLUGIN_FACTORY_HPP
 
-#include "plugin_api.hpp"
-#include "plugin_info.hpp"
+#include "plugin/plugin_info.hpp"
 #include "translator_manager.hpp"
 #include "request_router.hpp"
 #include "log.hpp"

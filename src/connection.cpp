@@ -12,15 +12,16 @@ namespace eiptnd {
 connection::connection(core& core)
   : log_(boost::log::keywords::channel = "connection")
   , core_(core)
-  , strand_(core_.get_ios())
-  , socket_(core_.get_ios())
+  , io_service_(core_.get_ios())
+  , strand_(*io_service_)
+  , socket_(*io_service_)
 {
   /// NOTE: There is no real conection here, only waiting for it.
 }
 
 connection::~connection()
 {
-  BOOST_LOG_SEV(log_, logging::info) << "Connection closed";
+  BOOST_LOG_SEV(log_, logging::info) << "Session is destroyed";
 
   //conn_mgr_.on_close(socket_.remote_endpoint());
 }
@@ -42,7 +43,8 @@ connection::on_connection()
   boost::log::attributes::constant<std::string> addr(remote_addr.str());
   net_raddr_ = log_.add_attribute("RemoteAddress", addr).first;
 
-  BOOST_LOG_SEV(log_, logging::info) << "Connection accepted";
+  BOOST_LOG_CHANNEL_SEV(log_, "connection@" + remote_addr.str(), logging::info)
+    << "Connection accepted";
 
   plugin_factory& pf = core_.get_pf();
   BOOST_AUTO(papi, boost::make_shared<plugin_api::api_translator>());

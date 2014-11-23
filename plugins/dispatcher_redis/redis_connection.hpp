@@ -21,7 +21,7 @@ class redis_connection
   typedef boost::function<void(bool)> bool_callback;
 
 public:
-  redis_connection(boost::asio::io_service& io_service);
+  redis_connection(boost::shared_ptr<boost::asio::io_service> io_service);
 
   /// Configure timeouts.
   void set_timeouts(std::size_t connect, std::size_t ping);
@@ -59,7 +59,7 @@ private:
   logging::logger_mt log_;
 
   /// Boost.Asio Proactor.
-  boost::asio::io_service& io_service_;
+  boost::shared_ptr<boost::asio::io_service> io_service_;
 
   /// Resolver unit
   boost::asio::ip::tcp::resolver resolver_;

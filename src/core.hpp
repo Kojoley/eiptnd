@@ -2,6 +2,7 @@
 #define CORE_HPP
 
 #include "log.hpp"
+#include "tcp_server.hpp"
 #include "plugin_factory.hpp"
 
 #include <vector>
@@ -20,7 +21,8 @@ class translator_manager;
 class core
 {
 public:
-  explicit core(boost::application::context& context, boost::program_options::variables_map& vm);
+  core(boost::application::context& context);
+  ~core();
 
   /// Handles run signal.
   int operator()();
@@ -28,8 +30,8 @@ public:
   /// Handles stop signal.
   bool stop();
 
-  boost::asio::io_service& get_ios() { return io_service_; }
-  plugin_factory& get_pf() { return plugin_factory_; }
+  boost::shared_ptr<boost::asio::io_service> get_ios() { return io_service_; }
+  plugin_factory& get_pf() { return *plugin_factory_; }
 
 private:
   /// Heart of service.
@@ -47,17 +49,17 @@ private:
   /// Variables map.
   boost::program_options::variables_map& vm_;
 
-  /// Thread group size (initialization parameter of io_service).
-  const std::size_t thread_pool_size_;
-
   /// Boost.Asio Proactor.
-  boost::asio::io_service io_service_;
+  boost::shared_ptr<boost::asio::io_service> io_service_;
 
   ///
-  plugin_factory plugin_factory_;
+  boost::shared_ptr<plugin_factory> plugin_factory_;
 
   /// Settings tree.
   boost::property_tree::ptree settings_;
+
+  ///
+  std::vector<boost::weak_ptr<tcp_server> > listeners_;
 };
 
 } // namespace eiptnd

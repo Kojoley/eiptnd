@@ -2,7 +2,7 @@
 #define ECHO_PLUGIN_HPP
 
 #include "log.hpp"
-#include "plugin_api.hpp"
+#include "plugin/plugin_translator.hpp"
 
 #include <iostream>
 #include <boost/array.hpp>

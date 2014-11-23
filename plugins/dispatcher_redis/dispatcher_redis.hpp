@@ -2,7 +2,7 @@
 #define DISPATCHER_REDIS_HPP
 
 #include "log.hpp"
-#include "plugin_api.hpp"
+#include "plugin/plugin_dispatcher.hpp"
 
 #include "redis_connection.hpp"
 

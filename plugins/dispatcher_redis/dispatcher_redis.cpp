@@ -38,7 +38,7 @@ dispatcher_redis::load_settings(const boost::property_tree::ptree& settings)
   BOOST_LOG_SEV(log_, logging::trace)
     << name() << " is configured to " << host_ << ":" << port_;
 
-  rcon_ = boost::shared_ptr<redis_connection>(new redis_connection(api_->io_service()));
+  rcon_ = boost::make_shared<redis_connection>(api_->io_service);
   rcon_->set_timeouts(timeout_connect, timeout_ping);
   rcon_->connect(host_, port_);
 }

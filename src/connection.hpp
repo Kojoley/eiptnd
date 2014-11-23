@@ -2,7 +2,7 @@
 #define CONNECTION_HPP
 
 #include "log.hpp"
-#include "plugin_api.hpp"
+#include "plugin/plugin_translator.hpp"
 
 #include <boost/asio/io_service.hpp>
 #include <boost/asio/ip/tcp.hpp>
@@ -15,7 +15,6 @@
 namespace eiptnd {
 
 class core;
-class plugin_factory;
 
 /// Represents a single connection from a client.
 class connection
@@ -62,6 +61,8 @@ private:
 
   ///
   core& core_;
+
+  boost::shared_ptr<boost::asio::io_service> io_service_;
 
   /// Strand to ensure the connection's handlers are not called concurrently.
   boost::asio::io_service::strand strand_;

@@ -2,8 +2,8 @@
 #define REQUEST_ROUTER_HPP
 
 #include "log.hpp"
-#include "plugin_api.hpp"
-#include "plugin_info.hpp"
+#include "plugin/plugin_dispatcher.hpp"
+#include "plugin/plugin_info.hpp"
 
 #include <string>
 #include <boost/container/flat_map.hpp>
@@ -14,6 +14,7 @@ namespace boost { namespace asio { namespace ip { class address; }}}
 
 namespace eiptnd {
 
+namespace plugin_api { class api_translator; }
 class core;
 
 class request_router

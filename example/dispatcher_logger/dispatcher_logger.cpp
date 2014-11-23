@@ -12,9 +12,10 @@ class delayed_callback
 {
 public:
   delayed_callback(
-      boost::asio::io_service& io_service,
+      boost::shared_ptr<boost::asio::io_service> io_service,
       plugin_api::process_data_callback callback)
-    : delay_timer_(io_service)
+    : io_service_(io_service)
+    , delay_timer_(*io_service_)
     , callback_(boost::move(callback))
   {
   }
@@ -31,6 +32,7 @@ public:
   }
 
 private:
+  boost::shared_ptr<boost::asio::io_service> io_service_;
   relative_timer delay_timer_;
   plugin_api::process_data_callback callback_;
 };
@@ -60,8 +62,8 @@ dispatcher_logger::handle_process_data(boost::shared_ptr<dptree> tree, plugin_ap
     callback(true);
   }
   else {
-    boost::make_shared<delayed_callback>(
-        boost::ref(api_->io_service()), callback)->delay(delay_);
+    boost::make_shared<delayed_callback>(api_->io_service, callback)
+        ->delay(delay_);
   }
 }
 
