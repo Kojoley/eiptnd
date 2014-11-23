@@ -102,8 +102,14 @@ plugin_factory::load_settings(const boost::property_tree::ptree& settings)
 
   BOOST_AUTO(path, settings.get_child_optional("path"));
   if (path) {
-    BOOST_FOREACH(const ptree::value_type &v, *path) {
-      load_dir(boost::filesystem::current_path() / v.second.get<std::string>(""));
+    BOOST_FOREACH(const ptree::value_type& v, *path) {
+      boost::filesystem::path plugin_path(v.second.get<std::string>(""));
+      if (plugin_path.is_absolute()) {
+        load_dir(plugin_path);
+      }
+      else {
+        load_dir(boost::filesystem::current_path() / plugin_path);
+      }
     }
   }
   else {
