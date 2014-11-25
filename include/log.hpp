@@ -1,6 +1,7 @@
 #ifndef LOG_HPP
 #define LOG_HPP
 
+#include <boost/algorithm/string.hpp>
 #include <boost/log/core.hpp>
 #include <boost/log/sources/severity_channel_logger.hpp>
 #include <boost/log/sources/channel_logger.hpp>
@@ -11,40 +12,58 @@ namespace eiptnd {
 namespace logging {
 
 enum severity_level {
-  global  = 0x000,
-  critical = 0x200,
-  error    = 0x400,
-  warning  = 0x600,
-  notify   = 0x800,
-  normal   = 0xA00,
-  info     = 0xC00,
-  debug    = 0xE00,
-  trace    = 0x1000
+  flood    = 0,
+  trace    = 1,
+  debug    = 2,
+  info     = 3,
+  normal   = 4,
+  notify   = 5,
+  warning  = 6,
+  error    = 7,
+  critical = 8,
+  global   = 9,
+  silence  = 10
+};
+
+static const char* level_strings[] = {
+  "FLOOD",
+  "TRACE",
+  "DEBUG",
+  "INFO",
+  "NORMAL",
+  "NOTIFY",
+  "WARNING",
+  "ERROR",
+  "CRITICAL",
+  "GLOBAL",
+  "SILENCE",
+  NULL
 };
 
 template <typename CharT, typename TraitsT>
 inline std::basic_ostream<CharT, TraitsT>& operator<< (
   std::basic_ostream<CharT, TraitsT>& os, const severity_level level)
 {
-  static const char* strings[] = {
-    "GLOBAL",
-    "CRITICAL",
-    "ERROR",
-    "WARNING",
-    "NOTIFY",
-    "NORMAL",
-    "INFO",
-    "DEBUG",
-    "TRACE"
-  };
+  return os << level_strings[level];
+}
 
-  os << strings[level / 0x200];
+template <typename CharT, typename TraitsT>
+inline std::basic_istream<CharT, TraitsT>& operator>> (
+  std::basic_istream<CharT, TraitsT>& is, severity_level& level)
+{
+  std::basic_string<CharT, TraitsT> value;
 
-  if (level % 0x200) {
-    os << CharT(':') << static_cast<std::size_t>(level);
+  is >> value;
+  boost::to_upper(value);
+
+  for (std::size_t i = 0; level_strings[i]; ++i) {
+    if (level_strings[i] == value) {
+      level = static_cast<severity_level>(i);
+      break;
+    }
   }
 
-  return os;
+  return is;
 }
 
 typedef boost::log::sources::severity_channel_logger_mt<severity_level> logger_mt;

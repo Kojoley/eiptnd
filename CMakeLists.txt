@@ -56,6 +56,7 @@ find_package(Boost COMPONENTS
     program_options
     filesystem
     log
+    log_setup
     REQUIRED)
 include_directories(BEFORE SYSTEM ${Boost_INCLUDE_DIRS})
 target_link_libraries(${PROJECT_NAME} ${Boost_LIBRARIES})

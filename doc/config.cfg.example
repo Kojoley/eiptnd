@@ -17,13 +17,37 @@
     "dispatcher" : {
 
       "logger-example" : {
-        "source": { "wialon"   : { "tcp" : [ 4444 ] } }
+        "source" : { "wialon"   : { "tcp" : [ 4444 ] } }
       },
 
       "redis" : {
-        "host" : "localhost",
-        "port" : 6789,
-        "source": { "wialon"   : { "tcp" : [ 4444 ] } }
+        "host"   : "localhost",
+        "port"   : 6789,
+        "source" : { "wialon"   : { "tcp" : [ 4444 ] } }
+      }
+
+    }
+
+  },
+
+  "log" : {
+
+    "Sinks" : {
+
+      "Console" : {
+        "Destination"  : "Console",
+        "Filter"       : "%Severity% >= normal",
+        "Format"       : "[%TimeStamp%] <%Severity%>\t[%Channel%] - %Message%",
+        "Asynchronous" : false,
+        "AutoFlush"    : true
+      },
+
+      "File" : {
+        "Destination"  : "TextFile",
+        "FileName"     : "MyApp_%3N.log",
+        "Format"       : "%TimeStamp%|%Severity%|%Channel%|%Message%",
+        "Asynchronous" : true,
+        "AutoFlush"    : true
       }
 
     }

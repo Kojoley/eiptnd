@@ -7,69 +7,58 @@
 #include <boost/bind.hpp>
 #include <boost/foreach.hpp>
 #include <boost/container/flat_set.hpp>
-#include <boost/core/null_deleter.hpp>
 #include <boost/log/attributes.hpp>
-#include <boost/log/expressions.hpp>
-#include <boost/log/keywords/order.hpp>
-#include <boost/log/keywords/ordering_window.hpp>
-#include <boost/log/support/date_time.hpp>
-#include <boost/log/sinks/async_frontend.hpp>
-#include <boost/log/sinks/text_ostream_backend.hpp>
-#include <boost/log/sinks/unbounded_ordering_queue.hpp>
+#include <boost/log/utility/setup/settings.hpp>
+#include <boost/log/utility/setup/from_settings.hpp>
+#include <boost/log/utility/setup/formatter_parser.hpp>
+#include <boost/log/utility/setup/filter_parser.hpp>
 #include <boost/make_shared.hpp>
 #include <boost/property_tree/json_parser.hpp>
 #include <boost/range/adaptor/map.hpp>
 
 namespace eiptnd {
 
-typedef boost::log::sinks::asynchronous_sink<
-  boost::log::sinks::text_ostream_backend,
-  boost::log::sinks::unbounded_ordering_queue<
-    boost::log::attribute_value_ordering<
-      std::size_t,
-      std::less<std::size_t>
-    >
-  >
-> sink_t;
+namespace app = boost::application;
 
 void
 init_logging()
 {
   namespace attrs = boost::log::attributes;
-  namespace expr = boost::log::expressions;
 
-  /*boost::log::register_simple_formatter_factory<logging::severity_level, char>("Severity");
-  boost::log::register_simple_filter_factory<logging::severity_level, char>("Severity");*/
+  BOOST_AUTO(log_core, boost::log::core::get());
+  log_core->add_global_attribute("TimeStamp", attrs::local_clock());
+  log_core->add_global_attribute("RecordID", attrs::counter<std::size_t>());
 
-  boost::shared_ptr<boost::log::core> core = boost::log::core::get();
+  boost::log::register_simple_formatter_factory<logging::severity_level, char>("Severity");
+  boost::log::register_simple_filter_factory<logging::severity_level, char>("Severity");
 
-  boost::shared_ptr<boost::log::sinks::text_ostream_backend> backend =
-    boost::make_shared<boost::log::sinks::text_ostream_backend>();
-  backend->add_stream(
-    boost::shared_ptr<std::ostream>(&std::clog, boost::null_deleter()));
-  backend->auto_flush(true);
-
-  boost::shared_ptr<sink_t> sink_ = boost::make_shared<sink_t>(
-    backend,
-    boost::log::keywords::order =
-      boost::log::make_attr_ordering("RecordID", std::less<std::size_t>()),
-    boost::log::keywords::ordering_window = boost::posix_time::milliseconds(250)
-  );
-  core->add_sink(sink_);
-  core->add_global_attribute("TimeStamp", attrs::local_clock());
-  core->add_global_attribute("RecordID", attrs::counter<std::size_t>());
-
-  //sink_->set_filter(expr::attr<logging::severity_level>("Severity") <= logging::warning);
-  sink_->set_formatter(
-    expr::format("[%1%] <%2%>\t[%3%] - %4%")
-      % expr::format_date_time<boost::posix_time::ptime>("TimeStamp", "%H:%M:%S.%f")
-      % expr::attr<logging::severity_level>("Severity")
-      % expr::attr<std::string>("Channel")
-      % expr::smessage
-  );
+  boost::log::settings log_settings;
+  log_settings["Core.Filter"] = "%Severity% >= normal";
+  log_settings["Sinks.Console.Destination"] = "Console";
+  log_settings["Sinks.Console.Format"] = "[%TimeStamp%] <%Severity%>\t[%Channel%] - %Message%";
+  log_settings["Sinks.Console.AutoFlush"] = true;
+  log_settings["Sinks.Console.Asynchronous"] = true;
+  boost::log::init_from_settings(log_settings);
 }
 
-namespace app = boost::application;
+void convert_log_settings(logging::logger& log_, boost::log::settings& log_settings, const boost::property_tree::ptree& settings, std::string path="")
+{
+  BOOST_LOG_SEV(log_, logging::flood)
+    << "Enter path=" << path;
+
+  BOOST_FOREACH(const boost::property_tree::ptree::value_type& v, settings) {
+    if (v.second.empty()) {
+      log_settings[path + v.first] = v.second.data();
+      BOOST_LOG_SEV(log_, logging::flood)
+        << "Assign " << (path + v.first) << "=" << v.second.data();
+    }
+    else {
+      BOOST_LOG_SEV(log_, logging::flood)
+        << "Recursion node=" << v.first;
+      convert_log_settings(log_, log_settings, v.second, path + v.first + ".");
+    }
+  }
+}
 
 core::core(app::context& context)
   : log_(boost::log::keywords::channel = "core")
@@ -203,6 +192,14 @@ core::load_settings()
 
     throw;
   }
+
+  typedef boost::optional<boost::property_tree::ptree&> log_tree_t;
+  if (const log_tree_t log_tree = settings_.get_child_optional("log")) {
+    boost::log::settings log_settings;
+    convert_log_settings(log_, log_settings, *log_tree);
+    boost::log::init_from_settings(log_settings);
+  }
+
 }
 
 } // namespace eiptnd
