@@ -126,10 +126,12 @@ request_router::load_settings(const boost::property_tree::ptree& settings)
   using boost::property_tree::ptree;
 
   BOOST_FOREACH(const ptree::value_type &dispatcher, settings) {
+    const std::string& dispatcher_uid = dispatcher.first;
+
     /// TODO: catch no loaded plugin
-    plugin_dispatcher_ptr plugin = create(dispatcher.first);
-    plugin->load_settings(dispatcher.second);
-    dispatchers_.emplace(dispatcher.first, plugin);
+    plugin_dispatcher_ptr dispatcher_ptr = create(dispatcher_uid);
+    dispatcher_ptr->load_settings(dispatcher.second);
+    dispatchers_.emplace(dispatcher_uid, dispatcher_ptr);
 
     BOOST_AUTO(it, routes_.end());
     BOOST_FOREACH(const ptree::value_type &translator, dispatcher.second.get_child("source", empty_ptree<ptree>())) {
@@ -141,16 +143,15 @@ request_router::load_settings(const boost::property_tree::ptree& settings)
           it = routes_.find(key);
         }
         if (it == routes_.end()) {
-          routes_.emplace(key, boost::make_shared<dispatchers_vector_ptr::element_type>(1, dispatchers_.at(dispatcher.first)));
-          it = routes_.find(key);
+          it = routes_.emplace(key, boost::make_shared<dispatchers_vector_ptr::element_type>(1, dispatcher_ptr)).first;
         }
         else {
-          it->second->push_back(dispatchers_.at(dispatcher.first));
+          it->second->push_back(dispatcher_ptr);
         }
 
         BOOST_LOG_SEV(log_, logging::trace)
           << "add route for port=" << port_num << " uid=" << translator.first
-          << " to " << dispatchers_.at(dispatcher.first)->uid();
+          << " to " << dispatcher_ptr->uid();
       }
     }
   }
